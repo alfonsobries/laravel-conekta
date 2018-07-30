@@ -10,7 +10,7 @@ use Illuminate\Support\Collection;
 use Stripe\Charge as StripeCharge;
 use Stripe\Refund as StripeRefund;
 use Stripe\Invoice as StripeInvoice;
-use Stripe\Customer as StripeCustomer;
+use Conekta\Customer as ConektaCustomer;
 use Stripe\BankAccount as StripeBankAccount;
 use Stripe\InvoiceItem as StripeInvoiceItem;
 use Stripe\Error\InvalidRequest as StripeErrorInvalidRequest;
@@ -20,11 +20,11 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 trait Billable
 {
     /**
-     * The Stripe API key.
+     * The Conekta API key.
      *
      * @var string
      */
-    protected static $stripeKey;
+    protected static $conektaKey;
 
     /**
      * Make a "one off" charge on the customer for the given amount.
@@ -43,15 +43,15 @@ trait Billable
 
         $options['amount'] = $amount;
 
-        if (! array_key_exists('source', $options) && $this->stripe_id) {
-            $options['customer'] = $this->stripe_id;
+        if (! array_key_exists('source', $options) && $this->conekta_id) {
+            $options['customer'] = $this->conekta_id;
         }
 
         if (! array_key_exists('source', $options) && ! array_key_exists('customer', $options)) {
             throw new InvalidArgumentException('No payment source provided.');
         }
 
-        return StripeCharge::create($options, ['api_key' => $this->getStripeKey()]);
+        return StripeCharge::create($options, ['api_key' => $this->getConektaKey()]);
     }
 
     /**
@@ -67,7 +67,7 @@ trait Billable
     {
         $options['charge'] = $charge;
 
-        return StripeRefund::create($options, ['api_key' => $this->getStripeKey()]);
+        return StripeRefund::create($options, ['api_key' => $this->getConektaKey()]);
     }
 
     /**
@@ -92,19 +92,19 @@ trait Billable
      */
     public function tab($description, $amount, array $options = [])
     {
-        if (! $this->stripe_id) {
-            throw new InvalidArgumentException(class_basename($this).' is not a Stripe customer. See the createAsStripeCustomer method.');
+        if (! $this->conekta_id) {
+            throw new InvalidArgumentException(class_basename($this).' is not a Conekta customer. See the createAsConektaCustomer method.');
         }
 
         $options = array_merge([
-            'customer' => $this->stripe_id,
+            'customer' => $this->conekta_id,
             'amount' => $amount,
             'currency' => $this->preferredCurrency(),
             'description' => $description,
         ], $options);
 
         return StripeInvoiceItem::create(
-            $options, ['api_key' => $this->getStripeKey()]
+            $options, ['api_key' => $this->getConektaKey()]
         );
     }
 
@@ -224,9 +224,9 @@ trait Billable
      */
     public function invoice()
     {
-        if ($this->stripe_id) {
+        if ($this->conekta_id) {
             try {
-                return StripeInvoice::create(['customer' => $this->stripe_id], $this->getStripeKey())->pay();
+                return StripeInvoice::create(['customer' => $this->conekta_id], $this->getConektaKey())->pay();
             } catch (StripeErrorInvalidRequest $e) {
                 return false;
             }
@@ -244,7 +244,7 @@ trait Billable
     {
         try {
             $stripeInvoice = StripeInvoice::upcoming(
-                ['customer' => $this->stripe_id], ['api_key' => $this->getStripeKey()]
+                ['customer' => $this->conekta_id], ['api_key' => $this->getConektaKey()]
             );
 
             return new Invoice($this, $stripeInvoice);
@@ -262,7 +262,7 @@ trait Billable
     public function findInvoice($id)
     {
         try {
-            return new Invoice($this, StripeInvoice::retrieve($id, $this->getStripeKey()));
+            return new Invoice($this, StripeInvoice::retrieve($id, $this->getConektaKey()));
         } catch (Exception $e) {
             //
         }
@@ -282,7 +282,7 @@ trait Billable
             throw new NotFoundHttpException;
         }
 
-        if ($invoice->customer !== $this->stripe_id) {
+        if ($invoice->customer !== $this->conekta_id) {
             throw new AccessDeniedHttpException;
         }
 
@@ -315,7 +315,7 @@ trait Billable
 
         $parameters = array_merge(['limit' => 24], $parameters);
 
-        $stripeInvoices = $this->asStripeCustomer()->invoices($parameters);
+        $stripeInvoices = $this->asConektaCustomer()->invoices($parameters);
 
         // Here we will loop through the Stripe invoices and create our own custom Invoice
         // instances that have more helper methods and are generally more convenient to
@@ -354,7 +354,7 @@ trait Billable
 
         $parameters = array_merge(['limit' => 24], $parameters);
 
-        $stripeCards = $this->asStripeCustomer()->sources->all(
+        $stripeCards = $this->asConektaCustomer()->sources->all(
             ['object' => 'card'] + $parameters
         );
 
@@ -374,7 +374,7 @@ trait Billable
      */
     public function defaultCard()
     {
-        $customer = $this->asStripeCustomer();
+        $customer = $this->asConektaCustomer();
 
         foreach ($customer->sources->data as $card) {
             if ($card->id === $customer->default_source) {
@@ -393,30 +393,30 @@ trait Billable
      */
     public function updateCard($token)
     {
-        $customer = $this->asStripeCustomer();
+        $customer = $this->asConektaCustomer();
 
-        $token = StripeToken::retrieve($token, ['api_key' => $this->getStripeKey()]);
+        // @TODO: Buscar tarjetas pasadas
 
-        // If the given token already has the card as their default source, we can just
-        // bail out of the method now. We don't need to keep adding the same card to
-        // a model's account every time we go through this particular method call.
-        if ($token[$token->type]->id === $customer->default_source) {
-            return;
-        }
+        $source = $customer->createPaymentSource(array(
+            'token_id' => $token,
+            'type'     => 'card'
+        ));
 
-        $card = $customer->sources->create(['source' => $token]);
+        // // If the given token already has the card as their default source, we can just
+        // // bail out of the method now. We don't need to keep adding the same card to
+        // // a model's account every time we go through this particular method call.
+        // if ($token[$token->type]->id === $customer->default_source) {
+        //     return;
+        // }
 
-        $customer->default_source = $card->id;
+        
+        // $source = $customer->default_source
+        //             ? $customer->sources->retrieve($customer->default_source)
+        //             : null;
 
-        $customer->save();
-
-        // Next we will get the default source for this model so we can update the last
+        // With the default source for this model we can update the last
         // four digits and the card brand on the record in the database. This allows
         // us to display the information on the front-end when updating the cards.
-        $source = $customer->default_source
-                    ? $customer->sources->retrieve($customer->default_source)
-                    : null;
-
         $this->fillCardDetails($source);
 
         $this->save();
@@ -446,19 +446,13 @@ trait Billable
     /**
      * Fills the model's properties with the source from Stripe.
      *
-     * @param  \Stripe\Card|\Stripe\BankAccount|null  $card
+     * @param  \Conekta\PaymentSource  $card
      * @return $this
      */
     protected function fillCardDetails($card)
     {
-        if ($card instanceof StripeCard) {
-            $this->card_brand = $card->brand;
-            $this->card_last_four = $card->last4;
-        } elseif ($card instanceof StripeBankAccount) {
-            $this->card_brand = 'Bank Account';
-            $this->card_last_four = $card->last4;
-        }
-
+        $this->card_brand = $card->brand;
+        $this->card_last_four = $card->last4;
         return $this;
     }
 
@@ -484,7 +478,7 @@ trait Billable
      */
     public function applyCoupon($coupon)
     {
-        $customer = $this->asStripeCustomer();
+        $customer = $this->asConektaCustomer();
 
         $customer->coupon = $coupon;
 
@@ -535,33 +529,31 @@ trait Billable
      */
     public function hasStripeId()
     {
-        return ! is_null($this->stripe_id);
+        return ! is_null($this->conekta_id);
     }
 
     /**
-     * Create a Stripe customer for the given Stripe model.
+     * Create a Conekta customer for the given Conekta model.
      *
      * @param  string  $token
      * @param  array  $options
-     * @return \Stripe\Customer
+     * @return \Conekta\Customer
      */
-    public function createAsStripeCustomer($token, array $options = [])
+    public function createAsConektaCustomer($token, array $options = [])
     {
-        $options = array_key_exists('email', $options)
-                ? $options : array_merge($options, ['email' => $this->email]);
+        $options = array_key_exists('email', $options) && array_key_exists('name', $options)
+                ? $options : array_merge($options, ['email' => $this->email], ['name' => $this->name]);
 
-        // Here we will create the customer instance on Stripe and store the ID of the
-        // user from Stripe. This ID will correspond with the Stripe user instances
-        // and allow us to retrieve users from Stripe later when we need to work.
-        $customer = StripeCustomer::create(
-            $options, $this->getStripeKey()
-        );
+        // Here we will create the customer instance on Conekta and store the ID of the
+        // user from conekta. This ID will correspond with the Conekta user instances
+        // and allow us to retrieve users from Conekta later when we need to work.
+        $customer = ConektaCustomer::create($options);
 
-        $this->stripe_id = $customer->id;
+        $this->conekta_id = $customer->id;
 
         $this->save();
 
-        // Next we will add the credit card to the user's account on Stripe using this
+        // Next we will add the credit card to the user's account on Conekta using this
         // token that was provided to this method. This will allow us to bill users
         // when they subscribe to plans or we need to do one-off charges on them.
         if (! is_null($token)) {
@@ -576,9 +568,9 @@ trait Billable
      *
      * @return \Stripe\Customer
      */
-    public function asStripeCustomer()
+    public function asConektaCustomer()
     {
-        return StripeCustomer::retrieve($this->stripe_id, $this->getStripeKey());
+        return ConektaCustomer::find($this->conekta_id);
     }
 
     /**
@@ -606,17 +598,17 @@ trait Billable
      *
      * @return string
      */
-    public static function getStripeKey()
+    public static function getConektaKey()
     {
-        if (static::$stripeKey) {
-            return static::$stripeKey;
+        if (static::$conektaKey) {
+            return static::$conektaKey;
         }
 
-        if ($key = getenv('STRIPE_SECRET')) {
+        if ($key = getenv('CONEKTA_SECRET')) {
             return $key;
         }
 
-        return config('services.stripe.secret');
+        return config('services.conekta.secret');
     }
 
     /**
@@ -627,6 +619,6 @@ trait Billable
      */
     public static function setStripeKey($key)
     {
-        static::$stripeKey = $key;
+        static::$conektaKey = $key;
     }
 }

@@ -199,9 +199,10 @@ class SubscriptionBuilder
      */
     public function create($token = null, array $options = [])
     {
-        $customer = $this->getStripeCustomer($token, $options);
-
+        $customer = $this->getConektaCustomer($token, $options);
+        dd("Hasta aqui voy", "asConektaCustomer");
         $subscription = $customer->subscriptions->create($this->buildPayload());
+
 
         if ($this->skipTrial) {
             $trialEndsAt = null;
@@ -211,8 +212,8 @@ class SubscriptionBuilder
 
         return $this->owner->subscriptions()->create([
             'name' => $this->name,
-            'stripe_id' => $subscription->id,
-            'stripe_plan' => $this->plan,
+            'conekta_id' => $subscription->id,
+            'conekta_plan' => $this->plan,
             'quantity' => $this->quantity,
             'trial_ends_at' => $trialEndsAt,
             'ends_at' => null,
@@ -220,18 +221,18 @@ class SubscriptionBuilder
     }
 
     /**
-     * Get the Stripe customer instance for the current user and token.
+     * Get the Conekta customer instance for the current user and token.
      *
      * @param  string|null  $token
      * @param  array  $options
-     * @return \Stripe\Customer
+     * @return \Conekta\Customer
      */
-    protected function getStripeCustomer($token = null, array $options = [])
+    protected function getConektaCustomer($token = null, array $options = [])
     {
-        if (! $this->owner->stripe_id) {
-            $customer = $this->owner->createAsStripeCustomer($token, $options);
+        if (! $this->owner->conekta_id) {
+            $customer = $this->owner->createAsConektaCustomer($token, $options);
         } else {
-            $customer = $this->owner->asStripeCustomer();
+            $customer = $this->owner->asConektaCustomer();
 
             if ($token) {
                 $this->owner->updateCard($token);

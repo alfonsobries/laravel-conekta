@@ -3,12 +3,13 @@
 namespace Laravel\Cashier\Tests;
 
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use PHPUnit_Framework_TestCase;
-use Laravel\Cashier\Tests\Fixtures\User;
+use Conekta\Conekta;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Http\Request;
 use Laravel\Cashier\Tests\Fixtures\CashierTestControllerStub;
+use Laravel\Cashier\Tests\Fixtures\User;
+use PHPUnit_Framework_TestCase;
 
 class CashierTest extends PHPUnit_Framework_TestCase
 {
@@ -36,7 +37,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
             $table->increments('id');
             $table->string('email');
             $table->string('name');
-            $table->string('stripe_id')->nullable();
+            $table->string('conekta_id')->nullable();
             $table->string('card_brand')->nullable();
             $table->string('card_last_four')->nullable();
             $table->timestamps();
@@ -46,13 +47,15 @@ class CashierTest extends PHPUnit_Framework_TestCase
             $table->increments('id');
             $table->integer('user_id');
             $table->string('name');
-            $table->string('stripe_id');
-            $table->string('stripe_plan');
+            $table->string('conekta_id');
+            $table->string('conekta_plan');
             $table->integer('quantity');
             $table->timestamp('trial_ends_at')->nullable();
             $table->timestamp('ends_at')->nullable();
             $table->timestamps();
         });
+
+        $this->setApiKey();
     }
 
     public function tearDown()
@@ -67,15 +70,17 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function testSubscriptionsCanBeCreated()
     {
         $user = User::create([
-            'email' => 'taylor@laravel.com',
-            'name' => 'Taylor Otwell',
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
         ]);
 
         // Create Subscription
         $user->newSubscription('main', 'monthly-10-1')->create($this->getTestToken());
 
+        dd(":DDD");
+
         $this->assertEquals(1, count($user->subscriptions));
-        $this->assertNotNull($user->subscription('main')->stripe_id);
+        $this->assertNotNull($user->subscription('main')->conekta_id);
 
         $this->assertTrue($user->subscribed('main'));
         $this->assertTrue($user->subscribedToPlan('monthly-10-1', 'main'));
@@ -132,7 +137,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
         // Swap Plan
         $subscription->swap('monthly-10-2');
 
-        $this->assertEquals('monthly-10-2', $subscription->stripe_plan);
+        $this->assertEquals('monthly-10-2', $subscription->conekta_plan);
 
         // Invoice Tests
         $invoice = $user->invoices()[1];
@@ -147,8 +152,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function test_creating_subscription_with_coupons()
     {
         $user = User::create([
-            'email' => 'taylor@laravel.com',
-            'name' => 'Taylor Otwell',
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
         ]);
 
         // Create Subscription
@@ -178,8 +183,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function test_creating_subscription_with_an_anchored_billing_cycle()
     {
         $user = User::create([
-            'email' => 'taylor@laravel.com',
-            'name' => 'Taylor Otwell',
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
         ]);
 
         // Create Subscription
@@ -225,8 +230,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function test_creating_subscription_with_trial()
     {
         $user = User::create([
-            'email' => 'taylor@laravel.com',
-            'name' => 'Taylor Otwell',
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
         ]);
 
         // Create Subscription
@@ -263,8 +268,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function test_creating_subscription_with_explicit_trial()
     {
         $user = User::create([
-             'email' => 'taylor@laravel.com',
-             'name' => 'Taylor Otwell',
+             'email' => 'alfonso@vexilo.com',
+             'name' => 'Alfonso Bribiesca',
         ]);
 
         // Create Subscription
@@ -301,8 +306,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function test_applying_coupons_to_existing_customers()
     {
         $user = User::create([
-            'email' => 'taylor@laravel.com',
-            'name' => 'Taylor Otwell',
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
         ]);
 
         // Create Subscription
@@ -322,8 +327,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function test_marking_as_cancelled_from_webhook()
     {
         $user = User::create([
-            'email' => 'taylor@laravel.com',
-            'name' => 'Taylor Otwell',
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
         ]);
 
         $user->newSubscription('main', 'monthly-10-1')
@@ -334,8 +339,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $request = Request::create('/', 'POST', [], [], [], [], json_encode(['id' => 'foo', 'type' => 'customer.subscription.deleted',
             'data' => [
                 'object' => [
-                    'id' => $subscription->stripe_id,
-                    'customer' => $user->stripe_id,
+                    'id' => $subscription->conekta_id,
+                    'customer' => $user->conekta_id,
                 ],
             ],
         ]));
@@ -353,8 +358,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function testCreatingOneOffInvoices()
     {
         $user = User::create([
-            'email' => 'taylor@laravel.com',
-            'name' => 'Taylor Otwell',
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
         ]);
 
         // Create Invoice
@@ -370,8 +375,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
     public function testRefunds()
     {
         $user = User::create([
-            'email' => 'taylor@laravel.com',
-            'name' => 'Taylor Otwell',
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
         ]);
 
         // Create Invoice
@@ -387,14 +392,23 @@ class CashierTest extends PHPUnit_Framework_TestCase
 
     protected function getTestToken()
     {
-        return \Stripe\Token::create([
-            'card' => [
-                'number' => '4242424242424242',
-                'exp_month' => 5,
-                'exp_year' => 2020,
-                'cvc' => '123',
-            ],
-        ], ['api_key' => getenv('STRIPE_SECRET')])->id;
+        return 'tok_test_visa_4242';
+    }
+
+    public function setApiKey()
+    {
+        $apiEnvKey = getenv('CONEKTA_SECRET');
+
+        if (!$apiEnvKey) {
+            $apiEnvKey = 'key_ZLy4aP2szht1HqzkCezDEA';
+        }
+        
+        Conekta::setApiKey($apiEnvKey);
+    }
+
+    public function setApiVersion($version)
+    {
+        Conekta::setApiVersion($version);
     }
 
     /**
