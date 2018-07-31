@@ -3,9 +3,10 @@
 namespace Laravel\Cashier;
 
 use Carbon\Carbon;
-use LogicException;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Cashier\Plan;
+use LogicException;
 
 class Subscription extends Model
 {
@@ -57,7 +58,7 @@ class Subscription extends Model
      */
     public function owner()
     {
-        $class = Cashier::stripeModel();
+        $class = Cashier::conektaModel();
 
         return $this->belongsTo($class, (new $class)->getForeignKey());
     }
@@ -282,13 +283,14 @@ class Subscription extends Model
     {
         $subscription = $this->asConektaSubscription();
 
-        $subscription->cancel(/*['at_period_end' => true]*/);
+        $subscription->cancel();
 
         // If the user was on trial, we will set the grace period to end when the trial
         // would have ended. Otherwise, we'll retrieve the end of the billing period
         // period and make that the end of the grace period for this current user.
         if ($this->onTrial()) {
-            $this->ends_at = $this->trial_end;
+            $conekta_plan = $this->plan->asConektaPlan();
+            $this->ends_at = Carbon::now()->addDays($conekta_plan->trial_period_days);
         } else {
             $this->ends_at = Carbon::createFromTimestamp(
                 $subscription->billing_cycle_end
@@ -366,5 +368,16 @@ class Subscription extends Model
         }
 
         return $subscription;
+    }
+
+
+    /**
+     * The suscription has one plan
+     * 
+     * @return Laravel\Cashier\Plan
+     */
+    public function plan()
+    {
+        return $this->hasOne(Plan::class, 'conekta_id', 'conekta_plan');
     }
 }

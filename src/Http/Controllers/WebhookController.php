@@ -21,7 +21,7 @@ class WebhookController extends Controller
     {
         $payload = json_decode($request->getContent(), true);
 
-        if (! $this->isInTestingEnvironment() && ! $this->eventExistsOnStripe($payload['id'])) {
+        if (! $this->isInTestingEnvironment() && ! $this->eventExistsOnConekta($payload['id'])) {
             return;
         }
 
@@ -42,11 +42,11 @@ class WebhookController extends Controller
      */
     protected function handleCustomerSubscriptionDeleted(array $payload)
     {
-        $user = $this->getUserByStripeId($payload['data']['object']['customer']);
+        $user = $this->getUserByConektaId($payload['data']['object']['customer']);
 
         if ($user) {
             $user->subscriptions->filter(function ($subscription) use ($payload) {
-                return $subscription->stripe_id === $payload['data']['object']['id'];
+                return $subscription->conekta_id === $payload['data']['object']['id'];
             })->each(function ($subscription) {
                 $subscription->markAsCancelled();
             });
@@ -58,14 +58,14 @@ class WebhookController extends Controller
     /**
      * Get the billable entity instance by Stripe ID.
      *
-     * @param  string  $stripeId
+     * @param  string  $conektaId
      * @return \Laravel\Cashier\Billable
      */
-    protected function getUserByStripeId($stripeId)
+    protected function getUserByConektaId($conektaId)
     {
-        $model = Cashier::stripeModel();
+        $model = Cashier::conektaModel();
 
-        return (new $model)->where('stripe_id', $stripeId)->first();
+        return (new $model)->where('conekta_id', $conektaId)->first();
     }
 
     /**
@@ -74,10 +74,10 @@ class WebhookController extends Controller
      * @param  string  $id
      * @return bool
      */
-    protected function eventExistsOnStripe($id)
+    protected function eventExistsOnConekta($id)
     {
         try {
-            return ! is_null(StripeEvent::retrieve($id, config('services.stripe.secret')));
+            return ! is_null(StripeEvent::retrieve($id, config('services.conekta.secret')));
         } catch (Exception $e) {
             return false;
         }

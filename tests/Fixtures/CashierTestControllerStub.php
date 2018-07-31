@@ -6,7 +6,7 @@ use Laravel\Cashier\Http\Controllers\WebhookController;
 
 class CashierTestControllerStub extends WebhookController
 {
-    protected function eventExistsOnStripe($id)
+    protected function eventExistsOnConekta($id)
     {
         return true;
     }

@@ -9,7 +9,6 @@ use Conekta\Token as ConektaToken;
 use Illuminate\Support\Collection;
 use Stripe\Charge as StripeCharge;
 use Stripe\Refund as StripeRefund;
-use Stripe\Invoice as StripeInvoice;
 use Conekta\Customer as ConektaCustomer;
 use Conekta\PaymentSource as ConektaPaymentSource;
 use Stripe\BankAccount as StripeBankAccount;
@@ -82,75 +81,29 @@ trait Billable
     }
 
     /**
-     * Add an invoice item to the customer's upcoming invoice.
-     *
-     * @param  string  $description
-     * @param  int  $amount
-     * @param  array  $options
-     * @return \Stripe\InvoiceItem
-     *
-     * @throws \InvalidArgumentException
-     */
-    public function tab($description, $amount, array $options = [])
-    {
-        if (! $this->conekta_id) {
-            throw new InvalidArgumentException(class_basename($this).' is not a Conekta customer. See the createAsConektaCustomer method.');
-        }
-
-        $options = array_merge([
-            'customer' => $this->conekta_id,
-            'amount' => $amount,
-            'currency' => $this->preferredCurrency(),
-            'description' => $description,
-        ], $options);
-
-        return StripeInvoiceItem::create(
-            $options,
-            ['api_key' => $this->getConektaKey()]
-        );
-    }
-
-    /**
-     * Invoice the customer for the given amount and generate an invoice immediately.
-     *
-     * @param  string  $description
-     * @param  int  $amount
-     * @param  array  $options
-     * @return \Laravel\Cashier\Invoice|bool
-     */
-    public function invoiceFor($description, $amount, array $options = [])
-    {
-        $this->tab($description, $amount, $options);
-
-        return $this->invoice();
-    }
-
-    /**
      * Begin creating a new subscription.
      *
-     * @param  string  $subscription
      * @param  string  $plan
      * @return \Laravel\Cashier\SubscriptionBuilder
      */
-    public function newSubscription($subscription, $plan)
+    public function newSubscription($plan)
     {
-        return new SubscriptionBuilder($this, $subscription, $plan);
+        return new SubscriptionBuilder($this, $plan);
     }
 
     /**
      * Determine if the Stripe model is on trial.
      *
-     * @param  string  $subscription
      * @param  string|null  $plan
      * @return bool
      */
-    public function onTrial($subscription = 'default', $plan = null)
+    public function onTrial($plan = null)
     {
         if (func_num_args() === 0 && $this->onGenericTrial()) {
             return true;
         }
 
-        $subscription = $this->subscription($subscription);
+        $subscription = $this->subscription();
 
         if (is_null($plan)) {
             return $subscription && $subscription->onTrial();
@@ -161,7 +114,7 @@ trait Billable
     }
 
     /**
-     * Determine if the Stripe model is on a "generic" trial at the model level.
+     * Determine if the Conekta model is on a "generic" trial at the model level.
      *
      * @return bool
      */
@@ -173,13 +126,12 @@ trait Billable
     /**
      * Determine if the Stripe model has a given subscription.
      *
-     * @param  string  $subscription
      * @param  string|null  $plan
      * @return bool
      */
-    public function subscribed($subscription = 'default', $plan = null)
+    public function subscribed($plan = null)
     {
-        $subscription = $this->subscription($subscription);
+        $subscription = $this->subscription();
 
         if (is_null($subscription)) {
             return false;
@@ -196,17 +148,11 @@ trait Billable
     /**
      * Get a subscription instance by name.
      *
-     * @param  string  $subscription
      * @return \Laravel\Cashier\Subscription|null
      */
-    public function subscription($subscription = 'default')
+    public function subscription()
     {
-        return $this->subscriptions->sortByDesc(function ($value) {
-            return $value->created_at->getTimestamp();
-        })
-        ->first(function ($value) use ($subscription) {
-            return $value->name === $subscription;
-        });
+        return $this->subscriptions->first();
     }
 
     /**
@@ -218,132 +164,6 @@ trait Billable
     {
         return $this->hasMany(Subscription::class, $this->getForeignKey())->orderBy('created_at', 'desc');
     }
-
-    // /**
-    //  * Invoice the billable entity outside of regular billing cycle.
-    //  *
-    //  * @return \Stripe\Invoice|bool
-    //  */
-    // public function invoice()
-    // {
-    //     if ($this->conekta_id) {
-    //         try {
-    //             return StripeInvoice::create(['customer' => $this->conekta_id], $this->getConektaKey())->pay();
-    //         } catch (StripeErrorInvalidRequest $e) {
-    //             return false;
-    //         }
-    //     }
-
-    //     return true;
-    // }
-
-    // /**
-    //  * Get the entity's upcoming invoice.
-    //  *
-    //  * @return \Laravel\Cashier\Invoice|null
-    //  */
-    // public function upcomingInvoice()
-    // {
-    //     try {
-    //         $stripeInvoice = StripeInvoice::upcoming(
-    //             ['customer' => $this->conekta_id],
-    //             ['api_key' => $this->getConektaKey()]
-    //         );
-
-    //         return new Invoice($this, $stripeInvoice);
-    //     } catch (StripeErrorInvalidRequest $e) {
-    //         //
-    //     }
-    // }
-
-    // /**
-    //  * Find an invoice by ID.
-    //  *
-    //  * @param  string  $id
-    //  * @return \Laravel\Cashier\Invoice|null
-    //  */
-    // public function findInvoice($id)
-    // {
-    //     try {
-    //         return new Invoice($this, StripeInvoice::retrieve($id, $this->getConektaKey()));
-    //     } catch (Exception $e) {
-    //         //
-    //     }
-    // }
-
-    // /**
-    //  * Find an invoice or throw a 404 error.
-    //  *
-    //  * @param  string  $id
-    //  * @return \Laravel\Cashier\Invoice
-    //  */
-    // public function findInvoiceOrFail($id)
-    // {
-    //     $invoice = $this->findInvoice($id);
-
-    //     if (is_null($invoice)) {
-    //         throw new NotFoundHttpException;
-    //     }
-
-    //     if ($invoice->customer !== $this->conekta_id) {
-    //         throw new AccessDeniedHttpException;
-    //     }
-
-    //     return $invoice;
-    // }
-
-    // /**
-    //  * Create an invoice download Response.
-    //  *
-    //  * @param  string  $id
-    //  * @param  array  $data
-    //  * @param  string  $storagePath
-    //  * @return \Symfony\Component\HttpFoundation\Response
-    //  */
-    // public function downloadInvoice($id, array $data, $storagePath = null)
-    // {
-    //     return $this->findInvoiceOrFail($id)->download($data, $storagePath);
-    // }
-
-    // /**
-    //  * Get a collection of the entity's invoices.
-    //  *
-    //  * @param  bool  $includePending
-    //  * @param  array  $parameters
-    //  * @return \Illuminate\Support\Collection
-    //  */
-    // public function invoices($includePending = false, $parameters = [])
-    // {
-    //     $invoices = [];
-
-    //     $parameters = array_merge(['limit' => 24], $parameters);
-
-    //     $stripeInvoices = $this->asConektaCustomer()->invoices($parameters);
-
-    //     // Here we will loop through the Stripe invoices and create our own custom Invoice
-    //     // instances that have more helper methods and are generally more convenient to
-    //     // work with than the plain Stripe objects are. Then, we'll return the array.
-    //     if (! is_null($stripeInvoices)) {
-    //         foreach ($stripeInvoices->data as $invoice) {
-    //             if ($invoice->paid || $includePending) {
-    //                 $invoices[] = new Invoice($this, $invoice);
-    //             }
-    //         }
-    //     }
-
-    //     return new Collection($invoices);
-    // }
-
-    // /**
-    //  * Get an array of the entity's invoices.
-    //  *
-    //  * @param  array  $parameters
-    //  * @return \Illuminate\Support\Collection
-    //  */
-    // public function invoicesIncludingPending(array $parameters = [])
-    // {
-    //     return $this->invoices(true, $parameters);
-    // }
 
     /**
      * Get a collection of the entity's cards.
@@ -497,12 +317,11 @@ trait Billable
      * Determine if the Conekta model is actively subscribed to one of the given plans.
      *
      * @param  string  $plans
-     * @param  string  $subscription
      * @return bool
      */
-    public function subscribedToPlan($plan, $subscription = 'default')
+    public function subscribedToPlan($plan)
     {
-        $subscription = $this->subscription($subscription);
+        $subscription = $this->subscription();
 
         if (! $subscription || ! $subscription->valid()) {
             return false;

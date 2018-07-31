@@ -11,7 +11,7 @@ class Cashier
      *
      * @var string
      */
-    protected static $currency = 'usd';
+    protected static $currency = 'mxn';
 
     /**
      * The current currency symbol.
@@ -32,9 +32,9 @@ class Cashier
      *
      * @return string
      */
-    public static function stripeModel()
+    public static function conektaModel()
     {
-        return getenv('STRIPE_MODEL') ?: config('services.stripe.model', 'App\\User');
+        return getenv('CONEKTA_MODEL') ?: config('services.conekta.model', 'App\\User');
     }
 
     /**

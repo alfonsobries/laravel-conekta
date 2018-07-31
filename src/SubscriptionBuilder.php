@@ -3,8 +3,9 @@
 namespace Laravel\Cashier;
 
 use Carbon\Carbon;
-use DateTimeInterface;
 use Conekta\Plan as ConektaPlan;
+use DateTimeInterface;
+use Laravel\Cashier\Plan;
 
 class SubscriptionBuilder
 {
@@ -29,47 +30,34 @@ class SubscriptionBuilder
      */
     protected $plan;
 
-    /**
-     * The quantity of the subscription.
-     *
-     * @var int
-     */
-    protected $quantity = 1;
+    // *
+    //  * The quantity of the subscription.
+    //  *
+    //  * @var int
+     
+    // protected $quantity = 1;
 
     /**
      * The date and time the trial will expire.
      *
      * @var \Carbon\Carbon
      */
-    protected $trialExpires;
+    // protected $trialExpires;
 
     /**
      * Indicates that the trial should end immediately.
      *
      * @var bool
      */
-    protected $skipTrial = false;
+    // protected $skipTrial = false;
 
-    /**
-     * The date on which the billing cycle should be anchored.
-     *
-     * @var int|null
-     */
-    protected $billingCycleAnchor = null;
 
-    /**
-     * The coupon code being applied to the customer.
-     *
-     * @var string|null
-     */
-    protected $coupon;
-
-    /**
-     * The metadata to apply to the subscription.
-     *
-     * @var array|null
-     */
-    protected $metadata;
+    // *
+    //  * The metadata to apply to the subscription.
+    //  *
+    //  * @var array|null
+     
+    // protected $metadata;
 
     /**
      * Create a new subscription builder instance.
@@ -79,106 +67,75 @@ class SubscriptionBuilder
      * @param  string  $plan
      * @return void
      */
-    public function __construct($owner, $name, $plan)
+    public function __construct($owner, $plan)
     {
-        $this->name = $name;
-        $this->plan = $plan;
+        $this->plan = Plan::where('conekta_id', $plan)->firstOrFail();
         $this->owner = $owner;
     }
 
-    /**
-     * Specify the quantity of the subscription.
-     *
-     * @param  int  $quantity
-     * @return $this
-     */
-    public function quantity($quantity)
-    {
-        $this->quantity = $quantity;
+    // *
+    //  * Specify the quantity of the subscription.
+    //  *
+    //  * @param  int  $quantity
+    //  * @return $this
+     
+    // public function quantity($quantity)
+    // {
+    //     $this->quantity = $quantity;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     * Specify the number of days of the trial.
-     *
-     * @param  int  $trialDays
-     * @return $this
-     */
-    public function trialDays($trialDays)
-    {
-        $this->trialExpires = Carbon::now()->addDays($trialDays);
+    // /**
+    //  * Specify the number of days of the trial.
+    //  *
+    //  * @param  int  $trialDays
+    //  * @return $this
+    //  */
+    // public function trialDays($trialDays)
+    // {
+    //     $this->trialExpires = Carbon::now()->addDays($trialDays);
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     * Specify the ending date of the trial.
-     *
-     * @param  \Carbon\Carbon  $trialUntil
-     * @return $this
-     */
-    public function trialUntil(Carbon $trialUntil)
-    {
-        $this->trialExpires = $trialUntil;
+    // /**
+    //  * Specify the ending date of the trial.
+    //  *
+    //  * @param  \Carbon\Carbon  $trialUntil
+    //  * @return $this
+    //  */
+    // public function trialUntil(Carbon $trialUntil)
+    // {
+    //     $this->trialExpires = $trialUntil;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     * Force the trial to end immediately.
-     *
-     * @return $this
-     */
-    public function skipTrial()
-    {
-        $this->skipTrial = true;
+    // /**
+    //  * Force the trial to end immediately.
+    //  *
+    //  * @return $this
+    //  */
+    // public function skipTrial()
+    // {
+    //     $this->skipTrial = true;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     * Change the billing cycle anchor on a plan creation.
-     *
-     * @param  \DateTimeInterface|int  $date
-     * @return $this
-     */
-    public function anchorBillingCycleOn($date)
-    {
-        if ($date instanceof DateTimeInterface) {
-            $date = $date->getTimestamp();
-        }
+    // *
+    //  * The metadata to apply to a new subscription.
+    //  *
+    //  * @param  array  $metadata
+    //  * @return $this
+     
+    // public function withMetadata($metadata)
+    // {
+    //     $this->metadata = $metadata;
 
-        $this->billingCycleAnchor = $date;
-
-        return $this;
-    }
-
-    /**
-     * The coupon to apply to a new subscription.
-     *
-     * @param  string  $coupon
-     * @return $this
-     */
-    public function withCoupon($coupon)
-    {
-        $this->coupon = $coupon;
-
-        return $this;
-    }
-
-    /**
-     * The metadata to apply to a new subscription.
-     *
-     * @param  array  $metadata
-     * @return $this
-     */
-    public function withMetadata($metadata)
-    {
-        $this->metadata = $metadata;
-
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * Add a new Stripe subscription to the Stripe model.
@@ -203,16 +160,14 @@ class SubscriptionBuilder
         $customer = $this->getConektaCustomer($token, $options);
         
         $subscription = $customer->createSubscription([
-            'plan' => $this->plan
+            'plan' => $this->plan->conekta_id
         ]);
 
         // @TODO: Revisar estos datos
         return $this->owner->subscriptions()->create([
-            'name' => $this->name,
             'conekta_id' => $subscription->id,
-            'conekta_plan' => $this->plan,
-            'quantity' => $this->quantity,
-            'trial_ends_at' => isset($subscription->trial_end) ? $subscription->trial_end : null,
+            'conekta_plan' => $this->plan->conekta_id,
+            'trial_ends_at' => $this->plan->trial_ends_at ?: $this->getTrialEndForPayload(),
             'ends_at' => null,
         ]);
     }
@@ -244,16 +199,16 @@ class SubscriptionBuilder
      *
      * @return int|null
      */
-    // protected function getTrialEndForPayload()
-    // {
-    //     if ($this->skipTrial) {
-    //         return 'now';
-    //     }
+    protected function getTrialEndForPayload()
+    {
+        $conekta_plan = $this->plan->asConektaPlan();
+        
+        if (!$conekta_plan->trial_period_days) {
+            return Carbon::now();
+        }
 
-    //     if ($this->trialExpires) {
-    //         return $this->trialExpires->getTimestamp();
-    //     }
-    // }
+        return Carbon::now()->addDays($conekta_plan->trial_period_days);
+    }
 
     // /**
     //  * Get the tax percentage for the Stripe payload.

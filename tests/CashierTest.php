@@ -46,10 +46,8 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $this->schema()->create('subscriptions', function ($table) {
             $table->increments('id');
             $table->integer('user_id');
-            $table->string('name');
             $table->string('conekta_id');
             $table->string('conekta_plan');
-            $table->integer('quantity');
             $table->timestamp('trial_ends_at')->nullable();
             $table->timestamp('ends_at')->nullable();
             $table->timestamps();
@@ -58,6 +56,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $this->schema()->create('plans', function ($table) {
             $table->increments('id');
             $table->string('conekta_id');
+            $table->timestamp('trial_ends_at')->nullable();
             // $table->string('name');
             // $table->integer('amount');
             // $table->string('currency', 3)->default('MXN');
@@ -88,29 +87,29 @@ class CashierTest extends PHPUnit_Framework_TestCase
             'name' => 'Alfonso Bribiesca',
         ]);
 
-        $plan = $this->createPlan('monthly-10-1', 'Mensual Plan');
-
+        $plan = $this->createPlan('Montly Plan');
+        $plan2 = $this->createPlan('Yearly Plan', ['interval' => 'year']);
+        
         // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')
+        $user->newSubscription($plan->id)
             ->create($this->getTestToken());
 
         $this->assertEquals(1, count($user->subscriptions));
-        $this->assertNotNull($user->subscription('main')->conekta_id);
+        $this->assertNotNull($user->subscription()->conekta_id);
 
-        $this->assertTrue($user->subscribed('main'));
-        $this->assertTrue($user->subscribedToPlan('monthly-10-1', 'main'));
-        $this->assertFalse($user->subscribedToPlan('monthly-10-1', 'something'));
-        $this->assertFalse($user->subscribedToPlan('monthly-10-2', 'main'));
-        $this->assertTrue($user->subscribed('main', 'monthly-10-1'));
-        $this->assertFalse($user->subscribed('main', 'monthly-10-2'));
-        $this->assertTrue($user->subscription('main')->active());
-        $this->assertFalse($user->subscription('main')->cancelled());
-        $this->assertFalse($user->subscription('main')->onGracePeriod());
-        $this->assertTrue($user->subscription('main')->recurring());
-        $this->assertFalse($user->subscription('main')->ended());
+        $this->assertTrue($user->subscribed());
+        $this->assertTrue($user->subscribedToPlan($plan->id));
+        $this->assertFalse($user->subscribedToPlan($plan2->id));
+        $this->assertTrue($user->subscribed($plan->id));
+        $this->assertFalse($user->subscribed($plan2->id));
+        $this->assertTrue($user->subscription()->active());
+        $this->assertFalse($user->subscription()->cancelled());
+        $this->assertFalse($user->subscription()->onGracePeriod());
+        $this->assertTrue($user->subscription()->recurring());
+        $this->assertFalse($user->subscription()->ended());
 
         // Cancel Subscription
-        $subscription = $user->subscription('main');
+        $subscription = $user->subscription();
         $subscription->cancel();
 
         $this->assertTrue($subscription->active());
@@ -141,79 +140,11 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($subscription->ended());
 
         // Swap Plan
-        $plan = $this->createPlan('monthly-10-2', 'Mensual Plan 2');
+        $subscription->swap($plan2->id);
 
-        $subscription->swap('monthly-10-2');
-
-        $this->assertEquals('monthly-10-2', $subscription->conekta_plan);
-    }
-
-    // public function test_creating_subscription_with_coupons()
-    // {
-    //     $user = User::create([
-    //         'email' => 'alfonso@vexilo.com',
-    //         'name' => 'Alfonso Bribiesca',
-    //     ]);
-
-    //     // Create Subscription
-    //     $user->newSubscription('main', 'monthly-10-1')
-    //             ->withCoupon('coupon-1')->create($this->getTestToken());
-
-    //     $subscription = $user->subscription('main');
-
-    //     $this->assertTrue($user->subscribed('main'));
-    //     $this->assertTrue($user->subscribed('main', 'monthly-10-1'));
-    //     $this->assertFalse($user->subscribed('main', 'monthly-10-2'));
-    //     $this->assertTrue($subscription->active());
-    //     $this->assertFalse($subscription->cancelled());
-    //     $this->assertFalse($subscription->onGracePeriod());
-    //     $this->assertTrue($subscription->recurring());
-    //     $this->assertFalse($subscription->ended());
-
-    //     // Invoice Tests
-    //     $invoice = $user->invoices()[0];
-
-    //     $this->assertTrue($invoice->hasDiscount());
-    //     $this->assertEquals('$5.00', $invoice->total());
-    //     $this->assertEquals('$5.00', $invoice->amountOff());
-    //     $this->assertFalse($invoice->discountIsPercentage());
-    // }
-
-    public function test_creating_subscription_with_an_anchored_billing_cycle()
-    {
-        $user = User::create([
-            'email' => 'alfonso@vexilo.com',
-            'name' => 'Alfonso Bribiesca',
-        ]);
-
-        // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')
-            ->anchorBillingCycleOn(new \DateTime('first day of next month'))
-            ->create($this->getTestToken());
-
-        $subscription = $user->subscription('main');
-
-        $this->assertTrue($user->subscribed('main'));
-        $this->assertTrue($user->subscribed('main', 'monthly-10-1'));
-        $this->assertFalse($user->subscribed('main', 'monthly-10-2'));
-        $this->assertTrue($subscription->active());
-        $this->assertFalse($subscription->cancelled());
-        $this->assertFalse($subscription->onGracePeriod());
-        $this->assertTrue($subscription->recurring());
-        $this->assertFalse($subscription->ended());
-
-        // Invoice Tests
-        $invoice = $user->invoices()[0];
-        $invoicePeriod = $invoice->invoiceItems()[0]->period;
-
-        $this->assertEquals(
-            (new \DateTime('now'))->format('Y-m-d'),
-            date('Y-m-d', $invoicePeriod->start)
-        );
-        $this->assertEquals(
-            (new \DateTime('first day of next month'))->format('Y-m-d'),
-            date('Y-m-d', $invoicePeriod->end)
-        );
+        $this->assertEquals($plan2->id, $subscription->conekta_plan);
+        $this->assertTrue($user->subscribedToPlan($plan2->id));
+        $this->assertFalse($user->subscribedToPlan($plan->id));
     }
 
     public function test_generic_trials()
@@ -233,11 +164,16 @@ class CashierTest extends PHPUnit_Framework_TestCase
             'name' => 'Alfonso Bribiesca',
         ]);
 
+        $plan = $this->createPlan('Montly Plan', [
+            'trial_period_days' => 7
+        ]);
+        
         // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')
-                ->trialDays(7)->create($this->getTestToken());
+        $user->newSubscription($plan->id)
+            // ->trialDays(7)
+            ->create($this->getTestToken());
 
-        $subscription = $user->subscription('main');
+        $subscription = $user->subscription();
 
         $this->assertTrue($subscription->active());
         $this->assertTrue($subscription->onTrial());
@@ -271,11 +207,15 @@ class CashierTest extends PHPUnit_Framework_TestCase
              'name' => 'Alfonso Bribiesca',
         ]);
 
+        $plan = $this->createPlan('Montly Plan', [
+            'trial_ends_at' => Carbon::tomorrow()->hour(3)->minute(15)
+        ]);
+        
         // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')
-             ->trialUntil(Carbon::tomorrow()->hour(3)->minute(15))->create($this->getTestToken());
+        $user->newSubscription($plan->id)
+            ->create($this->getTestToken());
 
-        $subscription = $user->subscription('main');
+        $subscription = $user->subscription();
 
         $this->assertTrue($subscription->active());
         $this->assertTrue($subscription->onTrial());
@@ -302,24 +242,6 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(Carbon::tomorrow()->hour(3)->minute(15), $subscription->trial_ends_at);
     }
 
-    public function test_applying_coupons_to_existing_customers()
-    {
-        $user = User::create([
-            'email' => 'alfonso@vexilo.com',
-            'name' => 'Alfonso Bribiesca',
-        ]);
-
-        // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')
-                ->create($this->getTestToken());
-
-        $user->applyCoupon('coupon-1');
-
-        $customer = $user->asStripeCustomer();
-
-        $this->assertEquals('coupon-1', $customer->discount->coupon->id);
-    }
-
     /**
      * @group foo
      */
@@ -330,10 +252,12 @@ class CashierTest extends PHPUnit_Framework_TestCase
             'name' => 'Alfonso Bribiesca',
         ]);
 
-        $user->newSubscription('main', 'monthly-10-1')
+        $plan = $this->createPlan('Montly Plan');
+
+        $user->newSubscription($plan->id)
                 ->create($this->getTestToken());
 
-        $subscription = $user->subscription('main');
+        $subscription = $user->subscription();
 
         $request = Request::create('/', 'POST', [], [], [], [], json_encode(['id' => 'foo', 'type' => 'customer.subscription.deleted',
             'data' => [
@@ -349,44 +273,9 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(200, $response->getStatusCode());
 
         $user = $user->fresh();
-        $subscription = $user->subscription('main');
+        $subscription = $user->subscription();
 
         $this->assertTrue($subscription->cancelled());
-    }
-
-    public function testCreatingOneOffInvoices()
-    {
-        $user = User::create([
-            'email' => 'alfonso@vexilo.com',
-            'name' => 'Alfonso Bribiesca',
-        ]);
-
-        // Create Invoice
-        $user->createAsStripeCustomer($this->getTestToken());
-        $user->invoiceFor('Laravel Cashier', 1000);
-
-        // Invoice Tests
-        $invoice = $user->invoices()[0];
-        $this->assertEquals('$10.00', $invoice->total());
-        $this->assertEquals('Laravel Cashier', $invoice->invoiceItems()[0]->asStripeInvoiceItem()->description);
-    }
-
-    public function testRefunds()
-    {
-        $user = User::create([
-            'email' => 'alfonso@vexilo.com',
-            'name' => 'Alfonso Bribiesca',
-        ]);
-
-        // Create Invoice
-        $user->createAsStripeCustomer($this->getTestToken());
-        $invoice = $user->invoiceFor('Laravel Cashier', 1000);
-
-        // Create the refund
-        $refund = $user->refund($invoice->charge);
-
-        // Refund Tests
-        $this->assertEquals(1000, $refund->amount);
     }
 
     /**
@@ -394,38 +283,19 @@ class CashierTest extends PHPUnit_Framework_TestCase
      *
      * @return \Conekta\Plan
      */
-    protected function createPlan($id, $name)
+    protected function createPlan($name, $attributes = [])
     {
-        // @TODO: Revisar estos datos
-        // ORiginalmente eran parate de la suscripción
-        // if ($this->skipTrial) {
-        //     $trialEndsAt = null;
-        // } else {
-        //     $trialEndsAt = $this->trialExpires;
-        // }
-
-        $attributes = array_filter([
-            'id' => $id,
-            'name' => $name,
-            'amount' => 1000, // @TODO
-            'currency' => 'MXN', // @TODO
-            'interval' => 'month', // @TODO
-            'frequency' => 1, // @TODO
-            'trial_period_days' => null, // @TODO
-            'expiry_count' => 12, // @TODO
-
-            // 'billing_cycle_anchor' => $this->billingCycleAnchor,
-            // 'coupon' => $this->coupon,
-            // 'metadata' => $this->metadata,
-            // 'plan' => $this->plan,
-            // 'quantity' => $this->quantity,
-            // 'tax_percent' => $this->getTaxPercentageForPayload(),
-            // 'trial_end' => $this->getTrialEndForPayload(),
-        ]);
-
         $conekta_plan = \Laravel\Cashier\Plan::createAsConektaPlan(
-            $id,
-            $attributes
+            $name,
+            array_merge([
+                'amount' => 1000,
+                'currency' => 'MXN',
+                'interval' => 'month',
+                'frequency' => 1,
+                'trial_period_days' => 0,
+                'trial_ends_at' => null,
+                'expiry_count' => null,
+            ], $attributes)
         );
         
         return $conekta_plan;
