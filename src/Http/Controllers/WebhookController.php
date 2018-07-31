@@ -77,7 +77,7 @@ class WebhookController extends Controller
     protected function eventExistsOnConekta($id)
     {
         try {
-            return ! is_null(StripeEvent::retrieve($id, \config('services.conekta.secret')));
+            return ! is_null(StripeEvent::retrieve($id, config('services.conekta.secret')));
         } catch (Exception $e) {
             return false;
         }

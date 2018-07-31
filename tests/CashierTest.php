@@ -255,7 +255,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $plan = $this->createPlan('Montly Plan');
 
         $user->newSubscription($plan->id)
-                ->create($this->getTestToken());
+            ->create($this->getTestToken());
 
         $subscription = $user->subscription();
 
@@ -276,6 +276,19 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $subscription = $user->subscription();
 
         $this->assertTrue($subscription->cancelled());
+    }
+
+    /** @test */
+    public function create_charge()
+    {
+        $user = User::create([
+            'email' => 'alfonso@vexilo.com',
+            'name' => 'Alfonso Bribiesca',
+        ]);
+
+        $conekta_order = $user->createOrder([], 'Box of Cohiba S1s', 35000);
+        
+        $this->assertNotEmpty($conekta_order->id);
     }
 
     /**

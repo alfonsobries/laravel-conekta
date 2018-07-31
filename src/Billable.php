@@ -4,16 +4,13 @@ namespace Laravel\Cashier;
 
 use Exception;
 use InvalidArgumentException;
-use Stripe\Card as StripeCard;
 use Conekta\Token as ConektaToken;
 use Illuminate\Support\Collection;
-use Stripe\Charge as StripeCharge;
+use Stripe\Card as StripeCard;
 use Stripe\Refund as StripeRefund;
+use Conekta\Charge as ConektaCharge;
+use Conekta\Order as ConektaOrder;
 use Conekta\Customer as ConektaCustomer;
-use Conekta\PaymentSource as ConektaPaymentSource;
-use Stripe\BankAccount as StripeBankAccount;
-use Stripe\InvoiceItem as StripeInvoiceItem;
-use Stripe\Error\InvalidRequest as StripeErrorInvalidRequest;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -31,7 +28,7 @@ trait Billable
      *
      * @param  int  $amount
      * @param  array  $options
-     * @return \Stripe\Charge
+     * @return \Conekta\Charge
      *
      * @throws \InvalidArgumentException
      */
@@ -51,7 +48,29 @@ trait Billable
             throw new InvalidArgumentException('No payment source provided.');
         }
 
-        return StripeCharge::create($options, ['api_key' => $this->getConektaKey()]);
+        return ConektaCharge::create($options, ['api_key' => $this->getConektaKey()]);
+    }
+
+    public function createOrder($options = [], $name, $unit_price, $quantity = 1)
+    {
+        $conekta_customer = $this->getConektaCustomer();
+
+        $options = array_merge([
+            'currency' => $this->preferredCurrency(),
+            'customer_info' => [
+                'customer_id' => $conekta_customer->id
+            ],
+            'line_items' => [
+                [
+                    'name' => $name,
+                    'unit_price' => $unit_price,
+                    'quantity' => $quantity
+                ]
+            ],
+        ], $options);
+
+
+        return ConektaOrder::create($options);
     }
 
     /**
@@ -379,6 +398,28 @@ trait Billable
         // when they subscribe to plans or we need to do one-off charges on them.
         if (! is_null($token)) {
             $customer = $this->updateCard($token);
+        }
+
+        return $customer;
+    }
+
+    /**
+     * Get the Conekta customer instance for the current user and token.
+     *
+     * @param  string|null  $token
+     * @param  array  $options
+     * @return \Conekta\Customer
+     */
+    public function getConektaCustomer($token = null, array $options = [])
+    {
+        if (! $this->conekta_id) {
+            $customer = $this->createAsConektaCustomer($token, $options);
+        } else {
+            $customer = $this->asConektaCustomer();
+
+            if ($token) {
+                $this->updateCard($token);
+            }
         }
 
         return $customer;

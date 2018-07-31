@@ -57,7 +57,7 @@ class SubscriptionBuilder
      */
     public function create($token = null, array $options = [])
     {
-        $customer = $this->getConektaCustomer($token, $options);
+        $customer = $this->owner->getConektaCustomer($token, $options);
         
         $subscription = $customer->createSubscription([
             'plan' => $this->plan->conekta_id
@@ -72,27 +72,7 @@ class SubscriptionBuilder
         ]);
     }
 
-    /**
-     * Get the Conekta customer instance for the current user and token.
-     *
-     * @param  string|null  $token
-     * @param  array  $options
-     * @return \Conekta\Customer
-     */
-    protected function getConektaCustomer($token = null, array $options = [])
-    {
-        if (! $this->owner->conekta_id) {
-            $customer = $this->owner->createAsConektaCustomer($token, $options);
-        } else {
-            $customer = $this->owner->asConektaCustomer();
-
-            if ($token) {
-                $this->owner->updateCard($token);
-            }
-        }
-
-        return $customer;
-    }
+    
 
     /**
      * Get the trial ending date for the Conekta payload.
