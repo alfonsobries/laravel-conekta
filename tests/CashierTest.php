@@ -55,6 +55,19 @@ class CashierTest extends PHPUnit_Framework_TestCase
             $table->timestamps();
         });
 
+        $this->schema()->create('plans', function ($table) {
+            $table->increments('id');
+            $table->string('conekta_id');
+            // $table->string('name');
+            // $table->integer('amount');
+            // $table->string('currency', 3)->default('MXN');
+            // $table->string('interval')->nullable();
+            // $table->string('frequency')->nullable();
+            // $table->integer('trial_period_days');
+            // $table->integer('expiry_count');
+            $table->timestamps();
+        });
+
         $this->setApiKey();
     }
 
@@ -62,6 +75,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
     {
         $this->schema()->drop('users');
         $this->schema()->drop('subscriptions');
+        $this->schema()->drop('plans');
     }
 
     /**
@@ -74,10 +88,11 @@ class CashierTest extends PHPUnit_Framework_TestCase
             'name' => 'Alfonso Bribiesca',
         ]);
 
-        // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')->create($this->getTestToken());
+        $plan = $this->createPlan('monthly-10-1', 'Mensual Plan');
 
-        dd(":DDD");
+        // Create Subscription
+        $user->newSubscription('main', 'monthly-10-1')
+            ->create($this->getTestToken());
 
         $this->assertEquals(1, count($user->subscriptions));
         $this->assertNotNull($user->subscription('main')->conekta_id);
@@ -125,60 +140,44 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($subscription->recurring());
         $this->assertFalse($subscription->ended());
 
-        // Increment & Decrement
-        $subscription->incrementQuantity();
-
-        $this->assertEquals(2, $subscription->quantity);
-
-        $subscription->decrementQuantity();
-
-        $this->assertEquals(1, $subscription->quantity);
-
         // Swap Plan
+        $plan = $this->createPlan('monthly-10-2', 'Mensual Plan 2');
+
         $subscription->swap('monthly-10-2');
 
         $this->assertEquals('monthly-10-2', $subscription->conekta_plan);
-
-        // Invoice Tests
-        $invoice = $user->invoices()[1];
-
-        $this->assertEquals('$10.00', $invoice->total());
-        $this->assertFalse($invoice->hasDiscount());
-        $this->assertFalse($invoice->hasStartingBalance());
-        $this->assertNull($invoice->coupon());
-        $this->assertInstanceOf(Carbon::class, $invoice->date());
     }
 
-    public function test_creating_subscription_with_coupons()
-    {
-        $user = User::create([
-            'email' => 'alfonso@vexilo.com',
-            'name' => 'Alfonso Bribiesca',
-        ]);
+    // public function test_creating_subscription_with_coupons()
+    // {
+    //     $user = User::create([
+    //         'email' => 'alfonso@vexilo.com',
+    //         'name' => 'Alfonso Bribiesca',
+    //     ]);
 
-        // Create Subscription
-        $user->newSubscription('main', 'monthly-10-1')
-                ->withCoupon('coupon-1')->create($this->getTestToken());
+    //     // Create Subscription
+    //     $user->newSubscription('main', 'monthly-10-1')
+    //             ->withCoupon('coupon-1')->create($this->getTestToken());
 
-        $subscription = $user->subscription('main');
+    //     $subscription = $user->subscription('main');
 
-        $this->assertTrue($user->subscribed('main'));
-        $this->assertTrue($user->subscribed('main', 'monthly-10-1'));
-        $this->assertFalse($user->subscribed('main', 'monthly-10-2'));
-        $this->assertTrue($subscription->active());
-        $this->assertFalse($subscription->cancelled());
-        $this->assertFalse($subscription->onGracePeriod());
-        $this->assertTrue($subscription->recurring());
-        $this->assertFalse($subscription->ended());
+    //     $this->assertTrue($user->subscribed('main'));
+    //     $this->assertTrue($user->subscribed('main', 'monthly-10-1'));
+    //     $this->assertFalse($user->subscribed('main', 'monthly-10-2'));
+    //     $this->assertTrue($subscription->active());
+    //     $this->assertFalse($subscription->cancelled());
+    //     $this->assertFalse($subscription->onGracePeriod());
+    //     $this->assertTrue($subscription->recurring());
+    //     $this->assertFalse($subscription->ended());
 
-        // Invoice Tests
-        $invoice = $user->invoices()[0];
+    //     // Invoice Tests
+    //     $invoice = $user->invoices()[0];
 
-        $this->assertTrue($invoice->hasDiscount());
-        $this->assertEquals('$5.00', $invoice->total());
-        $this->assertEquals('$5.00', $invoice->amountOff());
-        $this->assertFalse($invoice->discountIsPercentage());
-    }
+    //     $this->assertTrue($invoice->hasDiscount());
+    //     $this->assertEquals('$5.00', $invoice->total());
+    //     $this->assertEquals('$5.00', $invoice->amountOff());
+    //     $this->assertFalse($invoice->discountIsPercentage());
+    // }
 
     public function test_creating_subscription_with_an_anchored_billing_cycle()
     {
@@ -388,6 +387,48 @@ class CashierTest extends PHPUnit_Framework_TestCase
 
         // Refund Tests
         $this->assertEquals(1000, $refund->amount);
+    }
+
+    /**
+     * Creates a new Conekta\Plan
+     *
+     * @return \Conekta\Plan
+     */
+    protected function createPlan($id, $name)
+    {
+        // @TODO: Revisar estos datos
+        // ORiginalmente eran parate de la suscripción
+        // if ($this->skipTrial) {
+        //     $trialEndsAt = null;
+        // } else {
+        //     $trialEndsAt = $this->trialExpires;
+        // }
+
+        $attributes = array_filter([
+            'id' => $id,
+            'name' => $name,
+            'amount' => 1000, // @TODO
+            'currency' => 'MXN', // @TODO
+            'interval' => 'month', // @TODO
+            'frequency' => 1, // @TODO
+            'trial_period_days' => null, // @TODO
+            'expiry_count' => 12, // @TODO
+
+            // 'billing_cycle_anchor' => $this->billingCycleAnchor,
+            // 'coupon' => $this->coupon,
+            // 'metadata' => $this->metadata,
+            // 'plan' => $this->plan,
+            // 'quantity' => $this->quantity,
+            // 'tax_percent' => $this->getTaxPercentageForPayload(),
+            // 'trial_end' => $this->getTrialEndForPayload(),
+        ]);
+
+        $conekta_plan = \Laravel\Cashier\Plan::createAsConektaPlan(
+            $id,
+            $attributes
+        );
+        
+        return $conekta_plan;
     }
 
     protected function getTestToken()

@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "901c088149fbe01932c7c78f85f80980",
+    "content-hash": "fa39a367ad235f6663a54003d37ff38a",
     "packages": [
         {
             "name": "conekta/conekta-php",
-            "version": "v4.0.4",
+            "version": "dev-php7.2-support",
             "source": {
                 "type": "git",
                 "url": "https://github.com/conekta/conekta-php.git",
-                "reference": "585d29341ad8a398800856ae41904c11914cbae0"
+                "reference": "65f6a0c1b7ed6637b8794fa20b5ee877502e02a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/conekta/conekta-php/zipball/585d29341ad8a398800856ae41904c11914cbae0",
-                "reference": "585d29341ad8a398800856ae41904c11914cbae0",
+                "url": "https://api.github.com/repos/conekta/conekta-php/zipball/65f6a0c1b7ed6637b8794fa20b5ee877502e02a2",
+                "reference": "65f6a0c1b7ed6637b8794fa20b5ee877502e02a2",
                 "shasum": ""
             },
             "require": {
@@ -35,7 +35,6 @@
                     "lib/Conekta/"
                 ]
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -52,7 +51,11 @@
                 "conekta",
                 "payment processing"
             ],
-            "time": "2018-07-11T17:03:55+00:00"
+            "support": {
+                "source": "https://github.com/conekta/conekta-php/tree/php7.2-support",
+                "issues": "https://github.com/conekta/conekta-php/issues"
+            },
+            "time": "2018-04-25T20:04:19+00:00"
         },
         {
             "name": "doctrine/inflector",
@@ -3171,7 +3174,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "conekta/conekta-php": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

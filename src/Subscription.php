@@ -26,12 +26,12 @@ class Subscription extends Model
         'created_at', 'updated_at',
     ];
 
-    /**
-     * Indicates if the plan change should be prorated.
-     *
-     * @var bool
-     */
-    protected $prorate = true;
+    // *
+    //  * Indicates if the plan change should be prorated.
+    //  *
+    //  * @var bool
+     
+    // protected $prorate = true;
 
     /**
      * The date on which the billing cycle should be anchored.
@@ -132,82 +132,82 @@ class Subscription extends Model
         return $this->ends_at && $this->ends_at->isFuture();
     }
 
-    /**
-     * Increment the quantity of the subscription.
-     *
-     * @param  int  $count
-     * @return $this
-     */
-    public function incrementQuantity($count = 1)
-    {
-        $this->updateQuantity($this->quantity + $count);
+    // /**
+    //  * Increment the quantity of the subscription.
+    //  *
+    //  * @param  int  $count
+    //  * @return $this
+    //  */
+    // public function incrementQuantity($count = 1)
+    // {
+    //     $this->updateQuantity($this->quantity + $count);
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     *  Increment the quantity of the subscription, and invoice immediately.
-     *
-     * @param  int  $count
-     * @return $this
-     */
-    public function incrementAndInvoice($count = 1)
-    {
-        $this->incrementQuantity($count);
+    // /**
+    //  *  Increment the quantity of the subscription, and invoice immediately.
+    //  *
+    //  * @param  int  $count
+    //  * @return $this
+    //  */
+    // public function incrementAndInvoice($count = 1)
+    // {
+    //     $this->incrementQuantity($count);
 
-        $this->user->invoice();
+    //     $this->user->invoice();
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     * Decrement the quantity of the subscription.
-     *
-     * @param  int  $count
-     * @return $this
-     */
-    public function decrementQuantity($count = 1)
-    {
-        $this->updateQuantity(max(1, $this->quantity - $count));
+    // /**
+    //  * Decrement the quantity of the subscription.
+    //  *
+    //  * @param  int  $count
+    //  * @return $this
+    //  */
+    // public function decrementQuantity($count = 1)
+    // {
+    //     $this->updateQuantity(max(1, $this->quantity - $count));
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     * Update the quantity of the subscription.
-     *
-     * @param  int  $quantity
-     * @param  \Stripe\Customer|null  $customer
-     * @return $this
-     */
-    public function updateQuantity($quantity, $customer = null)
-    {
-        $subscription = $this->asStripeSubscription();
+    // /**
+    //  * Update the quantity of the subscription.
+    //  *
+    //  * @param  int  $quantity
+    //  * @param  \Stripe\Customer|null  $customer
+    //  * @return $this
+    //  */
+    // public function updateQuantity($quantity, $customer = null)
+    // {
+    //     $subscription = $this->asConektaSubscription();
 
-        $subscription->quantity = $quantity;
+    //     $subscription->quantity = $quantity;
 
-        $subscription->prorate = $this->prorate;
+    //     $subscription->prorate = $this->prorate;
 
-        $subscription->save();
+    //     $subscription->save();
 
-        $this->quantity = $quantity;
+    //     $this->quantity = $quantity;
 
-        $this->save();
+    //     $this->save();
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
-    /**
-     * Indicate that the plan change should not be prorated.
-     *
-     * @return $this
-     */
-    public function noProrate()
-    {
-        $this->prorate = false;
+    // *
+    //  * Indicate that the plan change should not be prorated.
+    //  *
+    //  * @return $this
+     
+    // public function noProrate()
+    // {
+    //     $this->prorate = false;
 
-        return $this;
-    }
+    //     return $this;
+    // }
 
     /**
      * Change the billing cycle anchor on a plan change.
@@ -248,11 +248,9 @@ class Subscription extends Model
      */
     public function swap($plan)
     {
-        $subscription = $this->asStripeSubscription();
-
-        $subscription->plan = $plan;
-
-        $subscription->prorate = $this->prorate;
+        $subscription = $this->asConektaSubscription();
+        
+        $subscription->update(['plan' => $plan]);
 
         if (! is_null($this->billingCycleAnchor)) {
             $subscription->billing_cycle_anchor = $this->billingCycleAnchor;
@@ -267,19 +265,8 @@ class Subscription extends Model
             $subscription->trial_end = 'now';
         }
 
-        // Again, if no explicit quantity was set, the default behaviors should be to
-        // maintain the current quantity onto the new plan. This is a sensible one
-        // that should be the expected behavior for most developers with Stripe.
-        if ($this->quantity) {
-            $subscription->quantity = $this->quantity;
-        }
-
-        $subscription->save();
-
-        $this->user->invoice();
-
         $this->fill([
-            'stripe_plan' => $plan,
+            'conekta_plan' => $plan,
             'ends_at' => null,
         ])->save();
 
@@ -293,18 +280,18 @@ class Subscription extends Model
      */
     public function cancel()
     {
-        $subscription = $this->asStripeSubscription();
+        $subscription = $this->asConektaSubscription();
 
-        $subscription->cancel(['at_period_end' => true]);
+        $subscription->cancel(/*['at_period_end' => true]*/);
 
         // If the user was on trial, we will set the grace period to end when the trial
         // would have ended. Otherwise, we'll retrieve the end of the billing period
         // period and make that the end of the grace period for this current user.
         if ($this->onTrial()) {
-            $this->ends_at = $this->trial_ends_at;
+            $this->ends_at = $this->trial_end;
         } else {
             $this->ends_at = Carbon::createFromTimestamp(
-                $subscription->current_period_end
+                $subscription->billing_cycle_end
             );
         }
 
@@ -320,7 +307,7 @@ class Subscription extends Model
      */
     public function cancelNow()
     {
-        $subscription = $this->asStripeSubscription();
+        $subscription = $this->asConektaSubscription();
 
         $subscription->cancel();
 
@@ -352,22 +339,8 @@ class Subscription extends Model
             throw new LogicException('Unable to resume subscription that is not within grace period.');
         }
 
-        $subscription = $this->asStripeSubscription();
-        
-        $subscription->cancel_at_period_end = false;
-
-        // To resume the subscription we need to set the plan parameter on the Stripe
-        // subscription object. This will force Stripe to resume this subscription
-        // where we left off. Then, we'll set the proper trial ending timestamp.
-        $subscription->plan = $this->stripe_plan;
-
-        if ($this->onTrial()) {
-            $subscription->trial_end = $this->trial_ends_at->getTimestamp();
-        } else {
-            $subscription->trial_end = 'now';
-        }
-
-        $subscription->save();
+        $subscription = $this->asConektaSubscription();
+        $subscription->resume();
 
         // Finally, we will remove the ending timestamp from the user's record in the
         // local database to indicate that the subscription is active again and is
@@ -384,14 +357,14 @@ class Subscription extends Model
      *
      * @throws \LogicException
      */
-    public function asStripeSubscription()
+    public function asConektaSubscription()
     {
-        $subscriptions = $this->user->asStripeCustomer()->subscriptions;
-
-        if (! $subscriptions) {
-            throw new LogicException('The Stripe customer does not have any subscriptions.');
+        $subscription = $this->user->asConektaCustomer()->subscription;
+        
+        if (! $subscription) {
+            throw new LogicException('The Conekta customer does not have any subscriptions.');
         }
 
-        return $subscriptions->retrieve($this->stripe_id);
+        return $subscription;
     }
 }

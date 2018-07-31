@@ -16,8 +16,8 @@ class CustomerTest extends BaseTest
     'name' => 'John Constantine',
     'email' => 'john_constantine@conekta.com',
     'payment_sources' => array(array(
-      'type' => 'oxxo_recurrent',
-    ))
+      'type' => 'oxxo_recurrent', 
+    )) 
   );
 
   public function testSuccesfulCustomerCreate()
@@ -107,11 +107,11 @@ class CustomerTest extends BaseTest
     $this->assertTrue($customer->shipping_contacts->total == 1);
   }
 
-  public function testCreateOfflineRecurrentReference()
+  public function testOfflineRecurrentSourceIsCreated()
   {
     $this->setApiKey();
     $customer = Customer::create(self::$validCustomer);
-    $source = $customer->createOfflineRecurrentReference(array(
+    $source = $customer->createPaymentSource(array(
       'type' => 'oxxo_recurrent'
     ));
     $this->assertTrue(strpos(get_class($source), 'PaymentSource') !== false);

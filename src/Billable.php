@@ -5,12 +5,13 @@ namespace Laravel\Cashier;
 use Exception;
 use InvalidArgumentException;
 use Stripe\Card as StripeCard;
-use Stripe\Token as StripeToken;
+use Conekta\Token as ConektaToken;
 use Illuminate\Support\Collection;
 use Stripe\Charge as StripeCharge;
 use Stripe\Refund as StripeRefund;
 use Stripe\Invoice as StripeInvoice;
 use Conekta\Customer as ConektaCustomer;
+use Conekta\PaymentSource as ConektaPaymentSource;
 use Stripe\BankAccount as StripeBankAccount;
 use Stripe\InvoiceItem as StripeInvoiceItem;
 use Stripe\Error\InvalidRequest as StripeErrorInvalidRequest;
@@ -104,7 +105,8 @@ trait Billable
         ], $options);
 
         return StripeInvoiceItem::create(
-            $options, ['api_key' => $this->getConektaKey()]
+            $options,
+            ['api_key' => $this->getConektaKey()]
         );
     }
 
@@ -155,7 +157,7 @@ trait Billable
         }
 
         return $subscription && $subscription->onTrial() &&
-               $subscription->stripe_plan === $plan;
+               $subscription->conekta_plan === $plan;
     }
 
     /**
@@ -188,7 +190,7 @@ trait Billable
         }
 
         return $subscription->valid() &&
-               $subscription->stripe_plan === $plan;
+               $subscription->conekta_plan === $plan;
     }
 
     /**
@@ -217,130 +219,131 @@ trait Billable
         return $this->hasMany(Subscription::class, $this->getForeignKey())->orderBy('created_at', 'desc');
     }
 
-    /**
-     * Invoice the billable entity outside of regular billing cycle.
-     *
-     * @return \Stripe\Invoice|bool
-     */
-    public function invoice()
-    {
-        if ($this->conekta_id) {
-            try {
-                return StripeInvoice::create(['customer' => $this->conekta_id], $this->getConektaKey())->pay();
-            } catch (StripeErrorInvalidRequest $e) {
-                return false;
-            }
-        }
+    // /**
+    //  * Invoice the billable entity outside of regular billing cycle.
+    //  *
+    //  * @return \Stripe\Invoice|bool
+    //  */
+    // public function invoice()
+    // {
+    //     if ($this->conekta_id) {
+    //         try {
+    //             return StripeInvoice::create(['customer' => $this->conekta_id], $this->getConektaKey())->pay();
+    //         } catch (StripeErrorInvalidRequest $e) {
+    //             return false;
+    //         }
+    //     }
 
-        return true;
-    }
+    //     return true;
+    // }
 
-    /**
-     * Get the entity's upcoming invoice.
-     *
-     * @return \Laravel\Cashier\Invoice|null
-     */
-    public function upcomingInvoice()
-    {
-        try {
-            $stripeInvoice = StripeInvoice::upcoming(
-                ['customer' => $this->conekta_id], ['api_key' => $this->getConektaKey()]
-            );
+    // /**
+    //  * Get the entity's upcoming invoice.
+    //  *
+    //  * @return \Laravel\Cashier\Invoice|null
+    //  */
+    // public function upcomingInvoice()
+    // {
+    //     try {
+    //         $stripeInvoice = StripeInvoice::upcoming(
+    //             ['customer' => $this->conekta_id],
+    //             ['api_key' => $this->getConektaKey()]
+    //         );
 
-            return new Invoice($this, $stripeInvoice);
-        } catch (StripeErrorInvalidRequest $e) {
-            //
-        }
-    }
+    //         return new Invoice($this, $stripeInvoice);
+    //     } catch (StripeErrorInvalidRequest $e) {
+    //         //
+    //     }
+    // }
 
-    /**
-     * Find an invoice by ID.
-     *
-     * @param  string  $id
-     * @return \Laravel\Cashier\Invoice|null
-     */
-    public function findInvoice($id)
-    {
-        try {
-            return new Invoice($this, StripeInvoice::retrieve($id, $this->getConektaKey()));
-        } catch (Exception $e) {
-            //
-        }
-    }
+    // /**
+    //  * Find an invoice by ID.
+    //  *
+    //  * @param  string  $id
+    //  * @return \Laravel\Cashier\Invoice|null
+    //  */
+    // public function findInvoice($id)
+    // {
+    //     try {
+    //         return new Invoice($this, StripeInvoice::retrieve($id, $this->getConektaKey()));
+    //     } catch (Exception $e) {
+    //         //
+    //     }
+    // }
 
-    /**
-     * Find an invoice or throw a 404 error.
-     *
-     * @param  string  $id
-     * @return \Laravel\Cashier\Invoice
-     */
-    public function findInvoiceOrFail($id)
-    {
-        $invoice = $this->findInvoice($id);
+    // /**
+    //  * Find an invoice or throw a 404 error.
+    //  *
+    //  * @param  string  $id
+    //  * @return \Laravel\Cashier\Invoice
+    //  */
+    // public function findInvoiceOrFail($id)
+    // {
+    //     $invoice = $this->findInvoice($id);
 
-        if (is_null($invoice)) {
-            throw new NotFoundHttpException;
-        }
+    //     if (is_null($invoice)) {
+    //         throw new NotFoundHttpException;
+    //     }
 
-        if ($invoice->customer !== $this->conekta_id) {
-            throw new AccessDeniedHttpException;
-        }
+    //     if ($invoice->customer !== $this->conekta_id) {
+    //         throw new AccessDeniedHttpException;
+    //     }
 
-        return $invoice;
-    }
+    //     return $invoice;
+    // }
 
-    /**
-     * Create an invoice download Response.
-     *
-     * @param  string  $id
-     * @param  array  $data
-     * @param  string  $storagePath
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
-    public function downloadInvoice($id, array $data, $storagePath = null)
-    {
-        return $this->findInvoiceOrFail($id)->download($data, $storagePath);
-    }
+    // /**
+    //  * Create an invoice download Response.
+    //  *
+    //  * @param  string  $id
+    //  * @param  array  $data
+    //  * @param  string  $storagePath
+    //  * @return \Symfony\Component\HttpFoundation\Response
+    //  */
+    // public function downloadInvoice($id, array $data, $storagePath = null)
+    // {
+    //     return $this->findInvoiceOrFail($id)->download($data, $storagePath);
+    // }
 
-    /**
-     * Get a collection of the entity's invoices.
-     *
-     * @param  bool  $includePending
-     * @param  array  $parameters
-     * @return \Illuminate\Support\Collection
-     */
-    public function invoices($includePending = false, $parameters = [])
-    {
-        $invoices = [];
+    // /**
+    //  * Get a collection of the entity's invoices.
+    //  *
+    //  * @param  bool  $includePending
+    //  * @param  array  $parameters
+    //  * @return \Illuminate\Support\Collection
+    //  */
+    // public function invoices($includePending = false, $parameters = [])
+    // {
+    //     $invoices = [];
 
-        $parameters = array_merge(['limit' => 24], $parameters);
+    //     $parameters = array_merge(['limit' => 24], $parameters);
 
-        $stripeInvoices = $this->asConektaCustomer()->invoices($parameters);
+    //     $stripeInvoices = $this->asConektaCustomer()->invoices($parameters);
 
-        // Here we will loop through the Stripe invoices and create our own custom Invoice
-        // instances that have more helper methods and are generally more convenient to
-        // work with than the plain Stripe objects are. Then, we'll return the array.
-        if (! is_null($stripeInvoices)) {
-            foreach ($stripeInvoices->data as $invoice) {
-                if ($invoice->paid || $includePending) {
-                    $invoices[] = new Invoice($this, $invoice);
-                }
-            }
-        }
+    //     // Here we will loop through the Stripe invoices and create our own custom Invoice
+    //     // instances that have more helper methods and are generally more convenient to
+    //     // work with than the plain Stripe objects are. Then, we'll return the array.
+    //     if (! is_null($stripeInvoices)) {
+    //         foreach ($stripeInvoices->data as $invoice) {
+    //             if ($invoice->paid || $includePending) {
+    //                 $invoices[] = new Invoice($this, $invoice);
+    //             }
+    //         }
+    //     }
 
-        return new Collection($invoices);
-    }
+    //     return new Collection($invoices);
+    // }
 
-    /**
-     * Get an array of the entity's invoices.
-     *
-     * @param  array  $parameters
-     * @return \Illuminate\Support\Collection
-     */
-    public function invoicesIncludingPending(array $parameters = [])
-    {
-        return $this->invoices(true, $parameters);
-    }
+    // /**
+    //  * Get an array of the entity's invoices.
+    //  *
+    //  * @param  array  $parameters
+    //  * @return \Illuminate\Support\Collection
+    //  */
+    // public function invoicesIncludingPending(array $parameters = [])
+    // {
+    //     return $this->invoices(true, $parameters);
+    // }
 
     /**
      * Get a collection of the entity's cards.
@@ -376,9 +379,9 @@ trait Billable
     {
         $customer = $this->asConektaCustomer();
 
-        foreach ($customer->sources->data as $card) {
-            if ($card->id === $customer->default_source) {
-                return $card;
+        foreach ($customer->payment_sources as $source) {
+            if ($source->id === $customer->default_payment_source_id) {
+                return $source;
             }
         }
 
@@ -389,30 +392,33 @@ trait Billable
      * Update customer's credit card.
      *
      * @param  string  $token
-     * @return void
+     * @return Conekta\Customer
      */
     public function updateCard($token)
     {
         $customer = $this->asConektaCustomer();
 
-        // @TODO: Buscar tarjetas pasadas
-
-        $source = $customer->createPaymentSource(array(
-            'token_id' => $token,
-            'type'     => 'card'
-        ));
-
+        // @TODO
+        // $token = ConektaToken::find($token);
         // // If the given token already has the card as their default source, we can just
         // // bail out of the method now. We don't need to keep adding the same card to
         // // a model's account every time we go through this particular method call.
-        // if ($token[$token->type]->id === $customer->default_source) {
+        // if ($token[$token->type]->id === $customer->default_payment_source_id) {
         //     return;
         // }
 
+        $source = $customer->createPaymentSource([
+            'token_id' => $token,
+            'type'     => 'card'
+        ]);
+
         
-        // $source = $customer->default_source
-        //             ? $customer->sources->retrieve($customer->default_source)
-        //             : null;
+        $customer->update(['default_payment_source_id' => $source->id]);
+
+        
+        $source = $customer->default_payment_source_id
+                    ? $this->defaultCard()
+                    : null;
 
         // With the default source for this model we can update the last
         // four digits and the card brand on the record in the database. This allows
@@ -420,6 +426,8 @@ trait Billable
         $this->fillCardDetails($source);
 
         $this->save();
+
+        return $customer;
     }
 
     /**
@@ -486,13 +494,13 @@ trait Billable
     }
 
     /**
-     * Determine if the Stripe model is actively subscribed to one of the given plans.
+     * Determine if the Conekta model is actively subscribed to one of the given plans.
      *
-     * @param  array|string  $plans
+     * @param  string  $plans
      * @param  string  $subscription
      * @return bool
      */
-    public function subscribedToPlan($plans, $subscription = 'default')
+    public function subscribedToPlan($plan, $subscription = 'default')
     {
         $subscription = $this->subscription($subscription);
 
@@ -500,13 +508,7 @@ trait Billable
             return false;
         }
 
-        foreach ((array) $plans as $plan) {
-            if ($subscription->stripe_plan === $plan) {
-                return true;
-            }
-        }
-
-        return false;
+        return $subscription->conekta_plan === $plan;
     }
 
     /**
@@ -518,7 +520,7 @@ trait Billable
     public function onPlan($plan)
     {
         return ! is_null($this->subscriptions->first(function ($value) use ($plan) {
-            return $value->stripe_plan === $plan && $value->valid();
+            return $value->conekta_plan === $plan && $value->valid();
         }));
     }
 
@@ -557,7 +559,7 @@ trait Billable
         // token that was provided to this method. This will allow us to bill users
         // when they subscribe to plans or we need to do one-off charges on them.
         if (! is_null($token)) {
-            $this->updateCard($token);
+            $customer = $this->updateCard($token);
         }
 
         return $customer;

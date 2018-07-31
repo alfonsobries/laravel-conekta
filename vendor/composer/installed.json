@@ -1,17 +1,17 @@
 [
     {
         "name": "conekta/conekta-php",
-        "version": "v4.0.4",
-        "version_normalized": "4.0.4.0",
+        "version": "dev-php7.2-support",
+        "version_normalized": "dev-php7.2-support",
         "source": {
             "type": "git",
             "url": "https://github.com/conekta/conekta-php.git",
-            "reference": "585d29341ad8a398800856ae41904c11914cbae0"
+            "reference": "65f6a0c1b7ed6637b8794fa20b5ee877502e02a2"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/conekta/conekta-php/zipball/585d29341ad8a398800856ae41904c11914cbae0",
-            "reference": "585d29341ad8a398800856ae41904c11914cbae0",
+            "url": "https://api.github.com/repos/conekta/conekta-php/zipball/65f6a0c1b7ed6637b8794fa20b5ee877502e02a2",
+            "reference": "65f6a0c1b7ed6637b8794fa20b5ee877502e02a2",
             "shasum": ""
         },
         "require": {
@@ -23,15 +23,14 @@
         "require-dev": {
             "phpunit/phpunit": "~6.1"
         },
-        "time": "2018-07-11T17:03:55+00:00",
+        "time": "2018-04-25T20:04:19+00:00",
         "type": "library",
-        "installation-source": "dist",
+        "installation-source": "source",
         "autoload": {
             "classmap": [
                 "lib/Conekta/"
             ]
         },
-        "notification-url": "https://packagist.org/downloads/",
         "license": [
             "MIT"
         ],
@@ -47,7 +46,11 @@
             "api",
             "conekta",
             "payment processing"
-        ]
+        ],
+        "support": {
+            "source": "https://github.com/conekta/conekta-php/tree/php7.2-support",
+            "issues": "https://github.com/conekta/conekta-php/issues"
+        }
     },
     {
         "name": "doctrine/inflector",

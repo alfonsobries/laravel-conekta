@@ -1,6 +1,6 @@
 ![README Cover Image](readme_cover.png)
 
-# Conekta PHP v.4.0.4
+# Conekta PHP v.4.0.2
 
 This is a php library that allows interaction with https://api.conekta.io API.
 
@@ -16,7 +16,7 @@ To get started, add the following to your PHP script:
 
 You can also install this library with composer:
 
-  require: "conekta/conekta-php": "4.0.4"
+  require: "conekta/conekta-php": "4.0.2"
 
 ## Usage
 
@@ -60,7 +60,7 @@ try {
   echo $e->getMessage();
 } catch (\Conekta\ParameterValidationError $e){
   echo $e->getMessage();
-} finally (\Conekta\Handler $e){
+} catch (\Conekta\Handler $e){
   echo $e->getMessage();
 }
 ```

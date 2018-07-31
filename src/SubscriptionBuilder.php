@@ -4,6 +4,7 @@ namespace Laravel\Cashier;
 
 use Carbon\Carbon;
 use DateTimeInterface;
+use Conekta\Plan as ConektaPlan;
 
 class SubscriptionBuilder
 {
@@ -191,7 +192,7 @@ class SubscriptionBuilder
     }
 
     /**
-     * Create a new Stripe subscription.
+     * Create a new Conekta subscription.
      *
      * @param  string|null  $token
      * @param  array  $options
@@ -200,22 +201,18 @@ class SubscriptionBuilder
     public function create($token = null, array $options = [])
     {
         $customer = $this->getConektaCustomer($token, $options);
-        dd("Hasta aqui voy", "asConektaCustomer");
-        $subscription = $customer->subscriptions->create($this->buildPayload());
+        
+        $subscription = $customer->createSubscription([
+            'plan' => $this->plan
+        ]);
 
-
-        if ($this->skipTrial) {
-            $trialEndsAt = null;
-        } else {
-            $trialEndsAt = $this->trialExpires;
-        }
-
+        // @TODO: Revisar estos datos
         return $this->owner->subscriptions()->create([
             'name' => $this->name,
             'conekta_id' => $subscription->id,
             'conekta_plan' => $this->plan,
             'quantity' => $this->quantity,
-            'trial_ends_at' => $trialEndsAt,
+            'trial_ends_at' => isset($subscription->trial_end) ? $subscription->trial_end : null,
             'ends_at' => null,
         ]);
     }
@@ -243,48 +240,30 @@ class SubscriptionBuilder
     }
 
     /**
-     * Build the payload for subscription creation.
-     *
-     * @return array
-     */
-    protected function buildPayload()
-    {
-        return array_filter([
-            'billing_cycle_anchor' => $this->billingCycleAnchor,
-            'coupon' => $this->coupon,
-            'metadata' => $this->metadata,
-            'plan' => $this->plan,
-            'quantity' => $this->quantity,
-            'tax_percent' => $this->getTaxPercentageForPayload(),
-            'trial_end' => $this->getTrialEndForPayload(),
-        ]);
-    }
-
-    /**
-     * Get the trial ending date for the Stripe payload.
+     * Get the trial ending date for the Conekta payload.
      *
      * @return int|null
      */
-    protected function getTrialEndForPayload()
-    {
-        if ($this->skipTrial) {
-            return 'now';
-        }
+    // protected function getTrialEndForPayload()
+    // {
+    //     if ($this->skipTrial) {
+    //         return 'now';
+    //     }
 
-        if ($this->trialExpires) {
-            return $this->trialExpires->getTimestamp();
-        }
-    }
+    //     if ($this->trialExpires) {
+    //         return $this->trialExpires->getTimestamp();
+    //     }
+    // }
 
-    /**
-     * Get the tax percentage for the Stripe payload.
-     *
-     * @return int|null
-     */
-    protected function getTaxPercentageForPayload()
-    {
-        if ($taxPercentage = $this->owner->taxPercentage()) {
-            return $taxPercentage;
-        }
-    }
+    // /**
+    //  * Get the tax percentage for the Stripe payload.
+    //  *
+    //  * @return int|null
+    //  */
+    // protected function getTaxPercentageForPayload()
+    // {
+    //     if ($taxPercentage = $this->owner->taxPercentage()) {
+    //         return $taxPercentage;
+    //     }
+    // }
 }
