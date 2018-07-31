@@ -133,70 +133,6 @@ class Subscription extends Model
         return $this->ends_at && $this->ends_at->isFuture();
     }
 
-    // /**
-    //  * Increment the quantity of the subscription.
-    //  *
-    //  * @param  int  $count
-    //  * @return $this
-    //  */
-    // public function incrementQuantity($count = 1)
-    // {
-    //     $this->updateQuantity($this->quantity + $count);
-
-    //     return $this;
-    // }
-
-    // /**
-    //  *  Increment the quantity of the subscription, and invoice immediately.
-    //  *
-    //  * @param  int  $count
-    //  * @return $this
-    //  */
-    // public function incrementAndInvoice($count = 1)
-    // {
-    //     $this->incrementQuantity($count);
-
-    //     $this->user->invoice();
-
-    //     return $this;
-    // }
-
-    // /**
-    //  * Decrement the quantity of the subscription.
-    //  *
-    //  * @param  int  $count
-    //  * @return $this
-    //  */
-    // public function decrementQuantity($count = 1)
-    // {
-    //     $this->updateQuantity(max(1, $this->quantity - $count));
-
-    //     return $this;
-    // }
-
-    // /**
-    //  * Update the quantity of the subscription.
-    //  *
-    //  * @param  int  $quantity
-    //  * @param  \Stripe\Customer|null  $customer
-    //  * @return $this
-    //  */
-    // public function updateQuantity($quantity, $customer = null)
-    // {
-    //     $subscription = $this->asConektaSubscription();
-
-    //     $subscription->quantity = $quantity;
-
-    //     $subscription->prorate = $this->prorate;
-
-    //     $subscription->save();
-
-    //     $this->quantity = $quantity;
-
-    //     $this->save();
-
-    //     return $this;
-    // }
 
     // *
     //  * Indicate that the plan change should not be prorated.
@@ -242,7 +178,7 @@ class Subscription extends Model
     }
 
     /**
-     * Swap the subscription to a new Stripe plan.
+     * Swap the subscription to a new Conekta plan.
      *
      * @param  string  $plan
      * @return $this
@@ -353,9 +289,9 @@ class Subscription extends Model
     }
 
     /**
-     * Get the subscription as a Stripe subscription object.
+     * Get the subscription as a Conekta subscription object.
      *
-     * @return \Stripe\Subscription
+     * @return \Conekta\Subscription
      *
      * @throws \LogicException
      */

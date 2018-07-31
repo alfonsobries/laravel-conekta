@@ -16,12 +16,6 @@ class SubscriptionBuilder
      */
     protected $owner;
 
-    /**
-     * The name of the subscription.
-     *
-     * @var string
-     */
-    protected $name;
 
     /**
      * The name of the plan being subscribed to.
@@ -30,40 +24,10 @@ class SubscriptionBuilder
      */
     protected $plan;
 
-    // *
-    //  * The quantity of the subscription.
-    //  *
-    //  * @var int
-     
-    // protected $quantity = 1;
-
-    /**
-     * The date and time the trial will expire.
-     *
-     * @var \Carbon\Carbon
-     */
-    // protected $trialExpires;
-
-    /**
-     * Indicates that the trial should end immediately.
-     *
-     * @var bool
-     */
-    // protected $skipTrial = false;
-
-
-    // *
-    //  * The metadata to apply to the subscription.
-    //  *
-    //  * @var array|null
-     
-    // protected $metadata;
-
     /**
      * Create a new subscription builder instance.
      *
      * @param  mixed  $owner
-     * @param  string  $name
      * @param  string  $plan
      * @return void
      */
@@ -72,70 +36,6 @@ class SubscriptionBuilder
         $this->plan = Plan::where('conekta_id', $plan)->firstOrFail();
         $this->owner = $owner;
     }
-
-    // *
-    //  * Specify the quantity of the subscription.
-    //  *
-    //  * @param  int  $quantity
-    //  * @return $this
-     
-    // public function quantity($quantity)
-    // {
-    //     $this->quantity = $quantity;
-
-    //     return $this;
-    // }
-
-    // /**
-    //  * Specify the number of days of the trial.
-    //  *
-    //  * @param  int  $trialDays
-    //  * @return $this
-    //  */
-    // public function trialDays($trialDays)
-    // {
-    //     $this->trialExpires = Carbon::now()->addDays($trialDays);
-
-    //     return $this;
-    // }
-
-    // /**
-    //  * Specify the ending date of the trial.
-    //  *
-    //  * @param  \Carbon\Carbon  $trialUntil
-    //  * @return $this
-    //  */
-    // public function trialUntil(Carbon $trialUntil)
-    // {
-    //     $this->trialExpires = $trialUntil;
-
-    //     return $this;
-    // }
-
-    // /**
-    //  * Force the trial to end immediately.
-    //  *
-    //  * @return $this
-    //  */
-    // public function skipTrial()
-    // {
-    //     $this->skipTrial = true;
-
-    //     return $this;
-    // }
-
-    // *
-    //  * The metadata to apply to a new subscription.
-    //  *
-    //  * @param  array  $metadata
-    //  * @return $this
-     
-    // public function withMetadata($metadata)
-    // {
-    //     $this->metadata = $metadata;
-
-    //     return $this;
-    // }
 
     /**
      * Add a new Stripe subscription to the Stripe model.
@@ -209,16 +109,4 @@ class SubscriptionBuilder
 
         return Carbon::now()->addDays($conekta_plan->trial_period_days);
     }
-
-    // /**
-    //  * Get the tax percentage for the Stripe payload.
-    //  *
-    //  * @return int|null
-    //  */
-    // protected function getTaxPercentageForPayload()
-    // {
-    //     if ($taxPercentage = $this->owner->taxPercentage()) {
-    //         return $taxPercentage;
-    //     }
-    // }
 }

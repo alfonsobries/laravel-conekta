@@ -11,7 +11,7 @@ class WebhookControllerTestStub extends WebhookController
         $_SERVER['__received'] = true;
     }
 
-    protected function eventExistsOnStripe($id)
+    protected function eventExistsOnConekta($id)
     {
         return true;
     }

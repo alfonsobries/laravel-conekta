@@ -64,6 +64,7 @@ class Cashier
             case 'usd':
             case 'aud':
             case 'cad':
+            case 'mxn':
                 return '$';
             case 'eur':
                 return '€';
