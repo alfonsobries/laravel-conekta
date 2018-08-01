@@ -16,7 +16,7 @@
         </testsuite>
     </testsuites>
     <php>
-        <env name="STRIPE_SECRET" value=""/>
-        <env name="STRIPE_MODEL" value="Laravel\Cashier\Tests\Fixtures\User"/>
+        <env name="CONEKTA_SECRET" value=""/>
+        <env name="CONEKTA_MODEL" value="Alfonsobries\ConektaCashier\Tests\Fixtures\User"/>
     </php>
 </phpunit>
