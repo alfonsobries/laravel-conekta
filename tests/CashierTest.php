@@ -208,9 +208,9 @@ class CashierTest extends PHPUnit_Framework_TestCase
         ]);
 
         $plan = $this->createPlan('Montly Plan', [
-            'trial_ends_at' => Carbon::tomorrow()->hour(3)->minute(15)
+            'trial_ends_at' => Carbon::now()->addDays(2)->hour(3)->minute(15)
         ]);
-        
+
         // Create Subscription
         $user->newSubscription($plan->id)
             ->create($this->getTestToken());
@@ -221,7 +221,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($subscription->onTrial());
         $this->assertFalse($subscription->recurring());
         $this->assertFalse($subscription->ended());
-        $this->assertEquals(Carbon::tomorrow()->hour(3)->minute(15), $subscription->trial_ends_at);
+        $this->assertEquals(Carbon::now()->addDays(2)->hour(3)->minute(15)->startOfMinute(), $subscription->trial_ends_at->startOfMinute());
 
         // Cancel Subscription
         $subscription->cancel();
@@ -239,7 +239,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($subscription->onTrial());
         $this->assertFalse($subscription->recurring());
         $this->assertFalse($subscription->ended());
-        $this->assertEquals(Carbon::tomorrow()->hour(3)->minute(15), $subscription->trial_ends_at);
+        $this->assertEquals(Carbon::now()->addDays(2)->hour(3)->minute(15)->startOfMinute(), $subscription->trial_ends_at->startOfMinute());
     }
 
     /**

@@ -34,7 +34,6 @@ class ComposerStaticInitc71aa1730c19b728ecd228ee65ac36e8
             'Symfony\\Component\\Finder\\' => 25,
             'Symfony\\Component\\EventDispatcher\\' => 34,
             'Symfony\\Component\\Debug\\' => 24,
-            'Stripe\\' => 7,
         ),
         'P' => 
         array (
@@ -125,10 +124,6 @@ class ComposerStaticInitc71aa1730c19b728ecd228ee65ac36e8
         'Symfony\\Component\\Debug\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/debug',
-        ),
-        'Stripe\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
         ),
         'Psr\\SimpleCache\\' => 
         array (
