@@ -1,7 +1,7 @@
 {
     "name": "alfonsobries/laravel-conekta",
-    "description": "Laravel Cashier provides an expressive, fluent interface to Stripe's subscription billing services.",
-    "keywords": ["laravel", "stripe", "billing"],
+    "description": "Laravel Conekta provides an expressive, fluent interface to Conekta's subscription billing services.",
+    "keywords": ["laravel", "conekta", "billing"],
     "license": "MIT",
     "support": {
         "issues": "https://github.com/alfonsobries/laravel-conekta/issues",
@@ -32,12 +32,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Laravel\\Cashier\\": "src/"
+            "Alfonsobries\\ConektaCashier\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Laravel\\Cashier\\Tests\\": "tests/"
+            "Alfonsobries\\ConektaCashier\\Tests\\": "tests/"
         }
     },
     "extra": {
@@ -46,7 +46,7 @@
         },
         "laravel": {
             "providers": [
-                "Laravel\\Cashier\\CashierServiceProvider"
+                "Alfonsobries\\ConektaCashier\\CashierServiceProvider"
             ]
         }
     },

@@ -1,11 +1,11 @@
 <?php
 
-namespace Laravel\Cashier;
+namespace Alfonsobries\ConektaCashier;
 
 use Carbon\Carbon;
 use Conekta\Plan as ConektaPlan;
 use DateTimeInterface;
-use Laravel\Cashier\Plan;
+use Alfonsobries\ConektaCashier\Plan;
 
 class SubscriptionBuilder
 {
@@ -41,7 +41,7 @@ class SubscriptionBuilder
      * Add a new Stripe subscription to the Stripe model.
      *
      * @param  array  $options
-     * @return \Laravel\Cashier\Subscription
+     * @return \Alfonsobries\ConektaCashier\Subscription
      */
     public function add(array $options = [])
     {
@@ -53,7 +53,7 @@ class SubscriptionBuilder
      *
      * @param  string|null  $token
      * @param  array  $options
-     * @return \Laravel\Cashier\Subscription
+     * @return \Alfonsobries\ConektaCashier\Subscription
      */
     public function create($token = null, array $options = [])
     {

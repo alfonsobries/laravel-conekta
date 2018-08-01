@@ -1,14 +1,14 @@
 <?php
 
-namespace Laravel\Cashier\Tests;
+namespace Alfonsobries\ConektaCashier\Tests;
 
 use Carbon\Carbon;
 use Conekta\Conekta;
 use Illuminate\Database\Capsule\Manager as DB;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Http\Request;
-use Laravel\Cashier\Tests\Fixtures\CashierTestControllerStub;
-use Laravel\Cashier\Tests\Fixtures\User;
+use Alfonsobries\ConektaCashier\Tests\Fixtures\CashierTestControllerStub;
+use Alfonsobries\ConektaCashier\Tests\Fixtures\User;
 use PHPUnit_Framework_TestCase;
 
 class CashierTest extends PHPUnit_Framework_TestCase
@@ -298,7 +298,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
      */
     protected function createPlan($name, $attributes = [])
     {
-        $conekta_plan = \Laravel\Cashier\Plan::createAsConektaPlan(
+        $conekta_plan = \Alfonsobries\ConektaCashier\Plan::createAsConektaPlan(
             $name,
             array_merge([
                 'amount' => 1000,

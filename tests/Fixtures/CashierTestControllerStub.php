@@ -1,8 +1,8 @@
 <?php
 
-namespace Laravel\Cashier\Tests\Fixtures;
+namespace Alfonsobries\ConektaCashier\Tests\Fixtures;
 
-use Laravel\Cashier\Http\Controllers\WebhookController;
+use Alfonsobries\ConektaCashier\Http\Controllers\WebhookController;
 
 class CashierTestControllerStub extends WebhookController
 {

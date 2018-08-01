@@ -41,11 +41,6 @@ class ComposerStaticInitc71aa1730c19b728ecd228ee65ac36e8
             'Psr\\Log\\' => 8,
             'Psr\\Container\\' => 14,
         ),
-        'L' => 
-        array (
-            'Laravel\\Cashier\\Tests\\' => 22,
-            'Laravel\\Cashier\\' => 16,
-        ),
         'I' => 
         array (
             'Illuminate\\View\\' => 16,
@@ -71,6 +66,11 @@ class ComposerStaticInitc71aa1730c19b728ecd228ee65ac36e8
             'Doctrine\\Instantiator\\' => 22,
             'Doctrine\\Common\\Inflector\\' => 26,
             'DeepCopy\\' => 9,
+        ),
+        'A' => 
+        array (
+            'Alfonsobries\\ConektaCashier\\Tests\\' => 34,
+            'Alfonsobries\\ConektaCashier\\' => 28,
         ),
     );
 
@@ -136,14 +136,6 @@ class ComposerStaticInitc71aa1730c19b728ecd228ee65ac36e8
         'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
-        ),
-        'Laravel\\Cashier\\Tests\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/tests',
-        ),
-        'Laravel\\Cashier\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/src',
         ),
         'Illuminate\\View\\' => 
         array (
@@ -212,6 +204,14 @@ class ComposerStaticInitc71aa1730c19b728ecd228ee65ac36e8
         'DeepCopy\\' => 
         array (
             0 => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy',
+        ),
+        'Alfonsobries\\ConektaCashier\\Tests\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/tests',
+        ),
+        'Alfonsobries\\ConektaCashier\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/src',
         ),
     );
 

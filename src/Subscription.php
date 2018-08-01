@@ -1,11 +1,11 @@
 <?php
 
-namespace Laravel\Cashier;
+namespace Alfonsobries\ConektaCashier;
 
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Cashier\Plan;
+use Alfonsobries\ConektaCashier\Plan;
 use LogicException;
 
 class Subscription extends Model
@@ -310,7 +310,7 @@ class Subscription extends Model
     /**
      * The suscription has one plan
      * 
-     * @return Laravel\Cashier\Plan
+     * @return Alfonsobries\ConektaCashier\Plan
      */
     public function plan()
     {

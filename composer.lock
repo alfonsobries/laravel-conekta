@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a5282aad1affde1a78e1257dc8e50e94",
+    "content-hash": "90d7b6a96427301171b1ba852ee175d0",
     "packages": [
         {
             "name": "conekta/conekta-php",

@@ -1,8 +1,8 @@
 <?php
 
-namespace Laravel\Cashier\Tests\Fixtures;
+namespace Alfonsobries\ConektaCashier\Tests\Fixtures;
 
-use Laravel\Cashier\Billable;
+use Alfonsobries\ConektaCashier\Billable;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class User extends Eloquent

@@ -1,10 +1,10 @@
 <?php
 
-namespace Laravel\Cashier\Tests;
+namespace Alfonsobries\ConektaCashier\Tests;
 
 use Illuminate\Http\Request;
 use PHPUnit_Framework_TestCase;
-use Laravel\Cashier\Tests\Fixtures\WebhookControllerTestStub;
+use Alfonsobries\ConektaCashier\Tests\Fixtures\WebhookControllerTestStub;
 
 class WebhookControllerTest extends PHPUnit_Framework_TestCase
 {

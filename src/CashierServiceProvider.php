@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Cashier;
+namespace Alfonsobries\ConektaCashier;
 
 use Illuminate\Support\ServiceProvider;
 

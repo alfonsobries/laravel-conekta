@@ -1,6 +1,6 @@
 <?php
 
-namespace Laravel\Cashier;
+namespace Alfonsobries\ConektaCashier;
 
 use Carbon\Carbon;
 use Conekta\Plan as ConektaPlan;

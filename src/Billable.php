@@ -1,11 +1,11 @@
 <?php
 
-namespace Laravel\Cashier;
+namespace Alfonsobries\ConektaCashier;
 
 use Exception;
 use InvalidArgumentException;
-use Conekta\Token as ConektaToken;
 use Illuminate\Support\Collection;
+use Conekta\Token as ConektaToken;
 use Stripe\Card as StripeCard;
 use Stripe\Refund as StripeRefund;
 use Conekta\Charge as ConektaCharge;
@@ -103,7 +103,7 @@ trait Billable
      * Begin creating a new subscription.
      *
      * @param  string  $plan
-     * @return \Laravel\Cashier\SubscriptionBuilder
+     * @return \Alfonsobries\ConektaCashier\SubscriptionBuilder
      */
     public function newSubscription($plan)
     {
@@ -167,7 +167,7 @@ trait Billable
     /**
      * Get a subscription instance by name.
      *
-     * @return \Laravel\Cashier\Subscription|null
+     * @return \Alfonsobries\ConektaCashier\Subscription|null
      */
     public function subscription()
     {
