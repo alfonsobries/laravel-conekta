@@ -1,5 +1,7 @@
+
 [![image](https://s3.us-east-2.amazonaws.com/vexilo-crm/logo-small.png)](<https://www.vexilo.com>)
 
+[![Build Status](https://img.shields.io/travis/alfonsobries/laravel-conekta.svg?style=flat-square)](https://travis-ci.org/alfonsobries/laravel-conekta)
 ## Introduction
 
 Laravel Conekta provides an expressive, fluent interface to [Conekta's](https://www.conekta.com/) subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing. 
