@@ -11,7 +11,6 @@ use LogicException;
 class Subscription extends Model
 {
     /**
-     * xx
      * The attributes that are not mass assignable.
      *
      * @var array
