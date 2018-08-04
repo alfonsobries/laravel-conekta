@@ -1,13 +1,12 @@
-# Laravel Conekta [![Build Status](https://img.shields.io/travis/alfonsobries/laravel-conekta.svg?style=flat-square)](https://travis-ci.org/alfonsobries/laravel-conekta) [![StyleCI](https://github.styleci.io/repos/142818419/shield?branch=master)](https://github.styleci.io/repos/142818419)
+# Laravel Conekta Cashier [![Build Status](https://img.shields.io/travis/alfonsobries/laravel-conekta.svg?style=flat-square)](https://travis-ci.org/alfonsobries/laravel-conekta) [![StyleCI](https://github.styleci.io/repos/142818419/shield?branch=master)](https://github.styleci.io/repos/142818419)
 
 [![image](https://s3.us-east-2.amazonaws.com/vexilo-crm/logo-small.png)](<https://www.vexilo.com>)
-
 
 Note: This package is still in development so be aware after you use it.
 
 ## Introduction
 
-Laravel Conekta provides an expressive, fluent interface to [Conekta's](https://www.conekta.com/) subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing. 
+Laravel Conekta Cashier provides an expressive, fluent interface to [Conekta's](https://www.conekta.com/) subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing. 
 
 ## Official Documentation
 
