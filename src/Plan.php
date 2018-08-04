@@ -61,7 +61,7 @@ class Plan extends Model
 
     private static function generatePlanId($attributes)
     {
-        $only = [   
+        $only = [
             'currency',
             'amount',
             'interval',

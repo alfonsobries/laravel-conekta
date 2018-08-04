@@ -8,6 +8,10 @@ Note: This package is still in development so be aware after you use it.
 
 Laravel Conekta Cashier provides an expressive, fluent interface to [Conekta's](https://www.conekta.com/) subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing. 
 
+## Installation
+
+`composer require alfonsobries/laravel-conekta-cashier`
+
 ## Official Documentation
 
 This package is based in the [Laravel Cashier](https://github.com/laravel/cashier) package so most of the documentation in the [Laravel website](http://laravel.com/docs/billing) could apply.

@@ -60,7 +60,7 @@ class Subscription extends Model
     {
         $class = Cashier::conektaModel();
 
-        return $this->belongsTo($class, (new $class)->getForeignKey());
+        return $this->belongsTo($class, 'billable_id');
     }
 
     /**

@@ -45,7 +45,7 @@ class CashierTest extends PHPUnit_Framework_TestCase
 
         $this->schema()->create('subscriptions', function ($table) {
             $table->increments('id');
-            $table->integer('user_id');
+            $table->integer('billable_id');
             $table->string('conekta_id');
             $table->string('conekta_plan');
             $table->timestamp('trial_ends_at')->nullable();

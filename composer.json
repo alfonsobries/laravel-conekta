@@ -46,7 +46,7 @@
         },
         "laravel": {
             "providers": [
-                "Alfonsobries\\ConektaCashier\\CashierServiceProvider"
+                "Alfonsobries\\ConektaCashier\\LaravelConektaCashierServiceProvider"
             ]
         }
     },
