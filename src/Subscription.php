@@ -11,6 +11,7 @@ use LogicException;
 class Subscription extends Model
 {
     /**
+     * xx
      * The attributes that are not mass assignable.
      *
      * @var array
@@ -309,7 +310,7 @@ class Subscription extends Model
 
     /**
      * The suscription has one plan
-     * 
+     *
      * @return Alfonsobries\ConektaCashier\Plan
      */
     public function plan()
