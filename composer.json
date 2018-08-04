@@ -1,11 +1,11 @@
 {
-    "name": "alfonsobries/laravel-conekta",
+    "name": "alfonsobries/laravel-conekta-cashier",
     "description": "Laravel Conekta provides an expressive, fluent interface to Conekta's subscription billing services.",
     "keywords": ["laravel", "conekta", "billing"],
     "license": "MIT",
     "support": {
-        "issues": "https://github.com/alfonsobries/laravel-conekta/issues",
-        "source": "https://github.com/alfonsobries/laravel-conekta"
+        "issues": "https://github.com/alfonsobries/laravel-conekta-cashier/issues",
+        "source": "https://github.com/alfonsobries/laravel-conekta-cashier"
     },
     "authors": [
         {
