@@ -2,7 +2,6 @@
 
 [![image](https://s3.us-east-2.amazonaws.com/vexilo-crm/logo-small.png)](<https://www.vexilo.com>)
 
-
 Note: This package is still in development so be aware after you use it.
 
 ## Introduction
